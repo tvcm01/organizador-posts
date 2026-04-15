@@ -2624,6 +2624,23 @@
                 if (sections.length > 1) return sections.map(extractSection);
             }
 
+            // Estratégia 0b — separar por "NN — Papel" em negrito (ex: "01 — Mentor", "02 — Pensador")
+            const papelNumRx = /^\d{1,2}\s*[—\-]+\s*\w/;
+            const papelNumNodes = nodes.filter(n => {
+                if (!['P','H1','H2','H3','H4'].includes(n.tagName)) return false;
+                const text = n.textContent.trim();
+                if (!papelNumRx.test(text)) return false;
+                // Parágrafo inteiramente em negrito
+                const boldText = [...n.querySelectorAll('strong, b')].map(el => el.textContent).join('').trim();
+                return boldText === text;
+            });
+            if (papelNumNodes.length > 1) {
+                const sections = splitNodes(nodes, n => papelNumNodes.includes(n), true);
+                // Descarta seção de cabeçalho (antes do primeiro roteiro numerado)
+                const filtered = sections.filter(s => s.length && papelNumNodes.includes(s[0]));
+                if (filtered.length > 1) return filtered.map(extractSection);
+            }
+
             // Estratégia 1 — separar por <hr> (quebras de página explícitas)
             if (div.querySelector('hr')) {
                 const sections = splitNodes(nodes, n => n.tagName === 'HR', false);
@@ -2727,7 +2744,7 @@
 
                 if (!titleFound) {
                     // Primeiro nó não-vazio = título; remove prefixo "Roteiro NN — "
-                    post.titulo = text.replace(/^roteiro\s*\d+\s*[—\-]+\s*/i, '').trim() || text;
+                    post.titulo = text.replace(/^roteiro\s*\d+\s*[—\-]+\s*/i, '').replace(/^\d{1,2}\s*[—\-]+\s*/, '').trim() || text;
                     titleFound = true;
                     tryExtractPapelFromText(text, post);
                     return;
