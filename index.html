@@ -1,0 +1,3253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizador de Posts</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1/mammoth.browser.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #e0e7ff;
+            --success: #10b981;
+            --blue: #3b82f6;
+            --blue-light: #dbeafe;
+            --danger: #ef4444;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--gray-100);
+            color: var(--gray-800);
+            min-height: 100vh;
+        }
+        /* Header */
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 0.875rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .header h1 {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        .header p {
+            font-size: 0.67rem;
+            opacity: 0.75;
+            margin-top: 1px;
+        }
+        .header-actions {
+            display: flex;
+            gap: 0.4rem;
+        }
+        .btn-header {
+            border: none;
+            padding: 0.48rem 0.9rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.78rem;
+            white-space: nowrap;
+        }
+        .btn-header.primary {
+            background: white;
+            color: var(--primary);
+        }
+        .btn-header.ghost {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.35);
+        }
+        .btn-header:hover {
+            opacity: 0.85;
+        }
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        .stat {
+            text-align: center;
+            padding: 0.7rem 0.5rem;
+            border-right: 1px solid var(--gray-200);
+        }
+        .stat:last-child {
+            border-right: none;
+        }
+        .stat-value {
+            font-size: 1.45rem;
+            font-weight: 700;
+        }
+        .stat-label {
+            font-size: 0.6rem;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        /* Toolbar */
+        .toolbar {
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            padding: 0.75rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+        .search-wrap {
+            position: relative;
+        }
+        .search-wrap .s-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+            pointer-events: none;
+        }
+        .search-input {
+            width: 100%;
+            padding: 0.58rem 0.875rem 0.58rem 2.1rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 10px;
+            font-size: 0.875rem;
+            outline: none;
+            background: var(--gray-50);
+        }
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+            background: white;
+        }
+        /* Filter pills */
+        .filter-pills {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filter-pill-wrap {
+            position: relative;
+        }
+        .filter-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.38rem 0.8rem;
+            border-radius: 20px;
+            border: 1.5px solid var(--gray-300);
+            background: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gray-600);
+            cursor: pointer;
+            transition: all 0.15s;
+            user-select: none;
+            white-space: nowrap;
+        }
+        .filter-pill:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .filter-pill.has-selection {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .filter-pill .pill-count {
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            padding: 0 0.35rem;
+            font-size: 0.65rem;
+        }
+        .filter-pill .pill-arrow {
+            font-size: 0.55rem;
+            opacity: 0.7;
+            transition: transform 0.15s;
+        }
+        .filter-pill.open .pill-arrow {
+            transform: rotate(180deg);
+        }
+        /* Filter menu */
+        .filter-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 14px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+            padding: 0.6rem;
+            min-width: 170px;
+            z-index: 200;
+            display: none;
+            animation: fadeIn 0.12s ease;
+        }
+        .filter-menu.open {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            padding: 0.42rem 0.6rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: var(--gray-700);
+            transition: background 0.1s;
+        }
+        .menu-item:hover {
+            background: var(--gray-50);
+        }
+        .menu-item input[type=checkbox] {
+            width: 15px;
+            height: 15px;
+            accent-color: var(--primary);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .menu-item label {
+            cursor: pointer;
+            flex: 1;
+        }
+        .menu-divider {
+            height: 1px;
+            background: var(--gray-100);
+            margin: 0.35rem 0;
+        }
+        .menu-clear {
+            width: 100%;
+            background: none;
+            border: none;
+            text-align: left;
+            padding: 0.35rem 0.6rem;
+            font-size: 0.72rem;
+            color: var(--primary);
+            cursor: pointer;
+            font-weight: 600;
+            border-radius: 6px;
+        }
+        .menu-clear:hover {
+            background: var(--primary-light);
+        }
+        #menu-tema {
+            min-width: 200px;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+        /* Login */
+        .login-overlay {
+            position: fixed; inset: 0;
+            background: var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999;
+        }
+        .login-box {
+            background: white;
+            border-radius: 16px;
+            padding: 2.5rem 2rem;
+            width: 100%; max-width: 360px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+            display: flex; flex-direction: column; gap: 1.25rem;
+        }
+        .login-logo {
+            text-align: center;
+        }
+        .login-logo h1 { font-size: 1.3rem; font-weight: 800; color: var(--primary); }
+        .login-logo p { font-size: 0.75rem; color: var(--gray-400); margin-top: 0.2rem; }
+        .login-field { display: flex; flex-direction: column; gap: 0.35rem; }
+        .login-field label { font-size: 0.75rem; font-weight: 600; color: var(--gray-600); }
+        .login-field input {
+            padding: 0.65rem 0.875rem;
+            border: 1.5px solid var(--gray-300);
+            border-radius: 8px; font-size: 0.9rem;
+            outline: none; transition: border-color 0.15s;
+        }
+        .login-field input:focus { border-color: var(--primary); }
+        .login-btn {
+            background: var(--primary); color: white;
+            border: none; border-radius: 8px;
+            padding: 0.75rem; font-size: 0.9rem;
+            font-weight: 700; cursor: pointer;
+            transition: background 0.15s;
+        }
+        .login-btn:hover { background: var(--primary-dark); }
+        .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .login-error {
+            font-size: 0.75rem; color: var(--danger);
+            background: #fee2e2; border-radius: 6px;
+            padding: 0.5rem 0.75rem; display: none;
+        }
+        .login-signup {
+            text-align: center; font-size: 0.72rem; color: var(--gray-400);
+        }
+        .login-signup a { color: var(--primary); cursor: pointer; font-weight: 600; }
+        /* ─── Galeria de Temas ─────────────────────────────── */
+        .temas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+            padding: 1.25rem;
+        }
+        .tema-card {
+            border-radius: 18px;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+        }
+        .tema-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 36px rgba(0,0,0,0.18);
+        }
+        .tema-card-body {
+            padding: 1.5rem 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            color: white;
+        }
+        .tema-card-icon {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.9;
+        }
+        .tema-card-name {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            text-transform: uppercase;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+            margin-bottom: 0.5rem;
+        }
+        .tema-card-desc {
+            font-size: 0.83rem;
+            opacity: 0.85;
+            line-height: 1.5;
+            flex: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .tema-card-footer {
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .tema-card-count {
+            font-size: 0.78rem;
+            font-weight: 700;
+            opacity: 0.9;
+            color: white;
+        }
+        .tema-status-pills {
+            display: flex;
+            gap: 0.3rem;
+        }
+        .tema-status-pill {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.15rem 0.5rem;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            backdrop-filter: blur(4px);
+        }
+        .tema-edit-btn {
+            position: absolute;
+            top: 0.875rem;
+            right: 0.875rem;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 50%;
+            width: 32px; height: 32px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: white;
+            opacity: 0;
+            transition: opacity 0.15s, background 0.15s;
+            backdrop-filter: blur(4px);
+        }
+        .tema-card:hover .tema-edit-btn { opacity: 1; }
+        .tema-edit-btn:hover { background: rgba(255,255,255,0.35); }
+        /* Tema detail bar */
+        .tema-detail-bar {
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            padding: 0.7rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .tema-back-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: var(--primary);
+            font-weight: 700;
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: background 0.1s;
+            white-space: nowrap;
+        }
+        .tema-back-btn:hover { background: var(--primary-light); }
+        .tema-detail-name {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--gray-800);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            flex: 1;
+        }
+        .tema-detail-desc {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            display: none;
+        }
+        .tema-edit-desc-btn {
+            background: none;
+            border: 1.5px solid var(--gray-300);
+            border-radius: 6px;
+            padding: 0.3rem 0.65rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--gray-500);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.1s;
+        }
+        .tema-edit-desc-btn:hover { border-color: var(--primary); color: var(--primary); }
+        /* Tema desc edit inline */
+        .tema-desc-edit-wrap {
+            display: none;
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--gray-200);
+            padding: 0.75rem 1.25rem;
+            gap: 0.5rem;
+            align-items: flex-end;
+        }
+        .tema-desc-edit-wrap.open { display: flex; }
+        .tema-desc-edit-wrap textarea {
+            flex: 1;
+            border: 1.5px solid var(--gray-300);
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.82rem;
+            font-family: inherit;
+            resize: none;
+            outline: none;
+        }
+        .tema-desc-edit-wrap textarea:focus { border-color: var(--primary); }
+        /* Import tema header */
+        .docx-tema-global {
+            background: var(--primary-light);
+            border-radius: 10px;
+            padding: 0.875rem 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .docx-tema-global label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .docx-tema-global input, .docx-tema-global textarea {
+            width: 100%;
+            border: 1.5px solid var(--primary);
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.87rem;
+            font-family: inherit;
+            outline: none;
+            background: white;
+        }
+        .docx-tema-global textarea { resize: none; }
+        /* Modo compacto */
+        .posts-grid.compact .post-card {
+            padding: 0.6rem 0.875rem;
+            gap: 0.35rem;
+        }
+        .posts-grid.compact .card-content,
+        .posts-grid.compact .card-meta,
+        .posts-grid.compact .card-metrics {
+            display: none;
+        }
+        /* Grupo por tema */
+        .tema-group-header {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 2px solid var(--gray-200);
+        }
+        .tema-group-header:first-child { margin-top: 0; }
+        .tema-group-count {
+            font-size: 0.65rem;
+            background: var(--gray-200);
+            color: var(--gray-500);
+            border-radius: 20px;
+            padding: 0.1rem 0.5rem;
+            font-weight: 700;
+        }
+        /* Botões de view toggle */
+        .view-toggle-btn {
+            height: 30px;
+            padding: 0 0.75rem;
+            border-radius: 20px;
+            border: 1.5px solid var(--gray-300);
+            background: white;
+            font-size: 0.73rem;
+            font-weight: 600;
+            color: var(--gray-600);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+        .view-toggle-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .view-toggle-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        /* Keyword insights */
+        .keyword-insights {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            padding-top: 0.1rem;
+        }
+        .insight-chip {
+            padding: 0.2rem 0.6rem;
+            background: #fef3c7;
+            color: #92400e;
+            border-radius: 20px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .insight-chip:hover {
+            background: #fde68a;
+        }
+        /* Content */
+        .content {
+            padding: 1rem 1.25rem;
+        }
+        .posts-grid {
+            display: grid;
+            gap: 0.875rem;
+        }
+        @media (min-width: 768px) {
+            .posts-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (min-width: 1200px) {
+            .posts-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        /* Card */
+        .post-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+            border: 1px solid var(--gray-200);
+            border-left: 4px solid var(--gray-300);
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            transition: box-shadow 0.15s;
+        }
+        .post-card:hover {
+            box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+        }
+        .card-content {
+            cursor: pointer;
+        }
+        .card-content.expanded {
+            -webkit-line-clamp: unset;
+            overflow: visible;
+        }
+        .post-card.pronto {
+            border-left-color: var(--blue);
+            background: #f0fdf4;
+        }
+        .post-card.usado {
+            border-left-color: var(--success);
+            background: #eff6ff;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+        .card-title {
+            font-weight: 600;
+            font-size: 0.78rem;
+            flex: 1;
+            line-height: 1.4;
+            color: var(--gray-600);
+        }
+        .status-badge {
+            padding: 0.18rem 0.55rem;
+            border-radius: 20px;
+            font-size: 0.66rem;
+            font-weight: 600;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .status-badge.rascunho {
+            background: var(--gray-100);
+            color: var(--gray-500);
+        }
+        .status-badge.pronto {
+            background: var(--blue-light);
+            color: #1e40af;
+        }
+        .status-badge.usado {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .card-content {
+            font-size: 0.81rem;
+            color: var(--gray-600);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+        }
+        .tag {
+            padding: 0.16rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.67rem;
+            font-weight: 500;
+        }
+        .card-tema-badge {
+            display: inline-block;
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #92400e;
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+            border-radius: 6px;
+            padding: 0.2rem 0.65rem;
+            width: fit-content;
+        }
+        .tag-funil {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        .tag-papel {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+        }
+        .tag-tema {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .tag-plataforma {
+            background: #fce7f3;
+            color: #9d174d;
+        }
+        .tag-formato {
+            background: #ecfdf5;
+            color: #065f46;
+        }
+        .card-meta {
+            font-size: 0.72rem;
+            color: var(--gray-400);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .card-link {
+            font-size: 0.72rem;
+            color: var(--primary);
+            text-decoration: none;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 200px;
+        }
+        .card-link:hover {
+            text-decoration: underline;
+        }
+        .card-metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.25rem;
+            padding: 0.45rem;
+            background: var(--gray-50);
+            border-radius: 8px;
+        }
+        .metric {
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--gray-700);
+        }
+        .metric-label {
+            font-size: 0.56rem;
+            color: var(--gray-400);
+            text-transform: uppercase;
+        }
+        .card-actions {
+            display: flex;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            align-items: center;
+        }
+        .card-actions-divider {
+            width: 1px;
+            height: 18px;
+            background: var(--gray-200);
+            margin: 0 0.1rem;
+        }
+        .btn-sm {
+            padding: 0.35rem 0.7rem;
+            border-radius: 6px;
+            border: 1px solid var(--gray-200);
+            background: white;
+            cursor: pointer;
+            font-size: 0.7rem;
+            color: var(--gray-600);
+            transition: all 0.12s;
+        }
+        .btn-sm:hover {
+            background: var(--gray-100);
+        }
+        .btn-sm.success {
+            background: #d1fae5;
+            color: #065f46;
+            border-color: #a7f3d0;
+        }
+        .btn-sm.blue {
+            background: var(--blue-light);
+            color: #1e40af;
+            border-color: #bfdbfe;
+        }
+        .btn-sm.neutral {
+            background: var(--gray-100);
+            color: var(--gray-600);
+        }
+        .btn-sm.danger:hover {
+            background: #fee2e2;
+            color: var(--danger);
+            border-color: #fca5a5;
+        }
+        .btn-sm.teleprompter {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #fde68a;
+        }
+        .btn-sm.teleprompter:hover {
+            background: #fde68a;
+        }
+        /* Rich Text Editor */
+        .rte-wrap {
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.12s, box-shadow 0.12s;
+        }
+        .rte-wrap:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        .rte-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            padding: 0.4rem 0.5rem;
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--gray-200);
+            align-items: center;
+        }
+        .rte-toolbar button {
+            width: 28px;
+            height: 28px;
+            border: 1px solid transparent;
+            background: transparent;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            color: var(--gray-700);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s;
+        }
+        .rte-toolbar button:hover {
+            background: var(--gray-200);
+            border-color: var(--gray-300);
+        }
+        .rte-toolbar select {
+            height: 28px;
+            border: 1px solid var(--gray-300);
+            border-radius: 5px;
+            background: white;
+            font-size: 0.75rem;
+            color: var(--gray-700);
+            cursor: pointer;
+            padding: 0 0.3rem;
+        }
+        .rte-toolbar input[type=color] {
+            width: 28px;
+            height: 28px;
+            border: 1px solid var(--gray-300);
+            border-radius: 5px;
+            cursor: pointer;
+            padding: 1px;
+            background: white;
+        }
+        .rte-toolbar .rte-sep {
+            width: 1px;
+            height: 20px;
+            background: var(--gray-300);
+            margin: 0 3px;
+        }
+        .rte-content {
+            min-height: 180px;
+            max-height: 380px;
+            overflow-y: auto;
+            padding: 0.75rem 0.875rem;
+            font-size: 0.875rem;
+            font-family: inherit;
+            line-height: 1.6;
+            outline: none;
+            background: white;
+        }
+        .rte-content:empty:before {
+            content: attr(data-placeholder);
+            color: var(--gray-400);
+            pointer-events: none;
+        }
+        /* Modal conteúdo / teleprompter */
+        .content-modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 0.875rem;
+        }
+        .teleprompter-text {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: var(--gray-800);
+            white-space: pre-wrap;
+            background: var(--gray-50);
+            border-radius: 10px;
+            padding: 1.25rem;
+            min-height: 200px;
+            max-height: 55vh;
+            overflow-y: auto;
+            font-family: Georgia, 'Times New Roman', serif;
+            letter-spacing: 0.01em;
+        }
+        .copy-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--gray-50);
+            border-radius: 8px;
+            padding: 0.5rem 0.875rem;
+            gap: 0.5rem;
+        }
+        .copy-bar span {
+            font-size: 0.72rem;
+            color: var(--gray-500);
+        }
+        .btn-copy {
+            padding: 0.4rem 1rem;
+            border-radius: 6px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 700;
+            transition: background 0.12s;
+        }
+        .btn-copy:hover {
+            background: var(--primary-dark);
+        }
+        .btn-copy.copied {
+            background: var(--success);
+        }
+        /* View tabs */
+        .view-tabs {
+            display: flex;
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        .view-tab {
+            flex: 1;
+            padding: 0.6rem 1rem;
+            border: none;
+            background: none;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--gray-500);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.15s;
+        }
+        .view-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        .view-tab .tab-badge {
+            display: inline-block;
+            background: var(--danger);
+            color: white;
+            border-radius: 10px;
+            font-size: 0.62rem;
+            padding: 0 0.4rem;
+            margin-left: 0.3rem;
+            vertical-align: middle;
+        }
+        /* Lixeira cards */
+        .trash-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+            border: 1px solid var(--gray-200);
+            border-left: 4px solid #fca5a5;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            opacity: 0.85;
+        }
+        .trash-expires {
+            font-size: 0.7rem;
+            color: var(--danger);
+            font-weight: 600;
+        }
+        .trash-expires.warning {
+            color: #f59e0b;
+        }
+        /* Empty / Loading */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--gray-400);
+            grid-column: 1/-1;
+        }
+        .empty-state .icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .empty-state p {
+            font-size: 0.88rem;
+        }
+        .loading {
+            text-align: center;
+            padding: 2.5rem;
+            color: var(--gray-400);
+            grid-column: 1/-1;
+        }
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 300;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        @media (min-width: 640px) {
+            .modal-overlay {
+                align-items: center;
+                padding: 1rem;
+            }
+        }
+        .modal {
+            background: white;
+            border-radius: 20px 20px 0 0;
+            width: 100%;
+            max-height: 93vh;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+        @media (min-width: 640px) {
+            .modal {
+                border-radius: 16px;
+                max-width: 600px;
+                max-height: 88vh;
+            }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+        .modal-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+        .btn-close {
+            background: var(--gray-100);
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray-600);
+        }
+        .form-group {
+            margin-bottom: 0.875rem;
+        }
+        .form-label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--gray-600);
+            margin-bottom: 0.35rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 0.6rem 0.875rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.12s, box-shadow 0.12s;
+            background: white;
+        }
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        .form-textarea {
+            resize: vertical;
+            min-height: 110px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+        .section-divider {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin: 1rem 0 0.75rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--gray-200);
+        }
+        .modal-footer {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            margin-top: 1.25rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--gray-200);
+        }
+        .btn-cancel {
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            border: 1px solid var(--gray-300);
+            background: white;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--gray-600);
+        }
+        .btn-save {
+            padding: 0.6rem 1.4rem;
+            border-radius: 8px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 700;
+        }
+        .btn-save:hover {
+            background: var(--primary-dark);
+        }
+        .btn-save:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        /* Import */
+        .import-hint {
+            font-size: 0.78rem;
+            color: var(--gray-500);
+            background: var(--gray-50);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            line-height: 1.6;
+            margin-bottom: 0.875rem;
+        }
+        .parsed-preview {
+            background: var(--primary-light);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.8rem;
+            color: var(--primary-dark);
+            margin-bottom: 0.875rem;
+            display: none;
+        }
+        /* Drop zone */
+        .drop-zone {
+            border: 2px dashed var(--gray-300);
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s;
+            background: var(--gray-50);
+            margin-bottom: 0.875rem;
+        }
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .drop-zone .drop-icon { font-size: 2rem; margin-bottom: 0.4rem; }
+        .drop-zone p { font-size: 0.82rem; color: var(--gray-500); margin-bottom: 0.3rem; }
+        .drop-zone .btn-select {
+            background: none; border: none; color: var(--primary);
+            font-weight: 700; font-size: 0.82rem; cursor: pointer; text-decoration: underline;
+        }
+        .import-separator {
+            text-align: center; font-size: 0.72rem; color: var(--gray-400);
+            margin: 0.75rem 0; position: relative;
+        }
+        .import-separator::before, .import-separator::after {
+            content: ''; position: absolute; top: 50%; width: 42%; height: 1px;
+            background: var(--gray-200);
+        }
+        .import-separator::before { left: 0; }
+        .import-separator::after { right: 0; }
+        /* Docx preview list */
+        .docx-preview {
+            border: 1px solid var(--gray-200);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 0.875rem;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+        .docx-preview-header {
+            background: var(--primary-light);
+            padding: 0.5rem 0.875rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .docx-post-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            padding: 0.6rem 0.875rem;
+            border-bottom: 1px solid var(--gray-100);
+            font-size: 0.82rem;
+        }
+        .docx-post-item:last-child { border-bottom: none; }
+        .docx-post-item input[type=checkbox] {
+            margin-top: 2px; accent-color: var(--primary); flex-shrink: 0;
+        }
+        .docx-post-item .post-preview-title {
+            font-weight: 600; color: var(--gray-800); line-height: 1.4;
+        }
+        .docx-post-item .post-preview-snippet {
+            font-size: 0.73rem; color: var(--gray-500);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            max-width: 380px;
+        }
+        .docx-tema-input {
+            margin-top: 0.35rem;
+            width: 100%;
+            max-width: 280px;
+            padding: 0.3rem 0.6rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-family: inherit;
+            outline: none;
+            color: var(--gray-700);
+        }
+        .docx-tema-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gray-800);
+            color: white;
+            padding: 0.7rem 1.4rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            z-index: 400;
+            opacity: 0;
+            transition: opacity 0.25s;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div>
+            <h1>Organizador de Posts</h1>
+            <p id="header-date"></p>
+        </div>
+        <div class="header-actions">
+            <button class="btn-header ghost" onclick="openImport()">⬇ Importar</button>
+            <button class="btn-header primary" onclick="openModal()">+ Novo Post</button>
+            <button class="btn-header ghost" onclick="doLogout()" title="Sair">↩ Sair</button>
+        </div>
+    </header>
+
+    <div class="stats">
+        <div class="stat">
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-label">Total</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="stat-prontos">0</div>
+            <div class="stat-label">Prontos</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="stat-usados">0</div>
+            <div class="stat-label">Usados</div>
+        </div>
+    </div>
+
+    <div class="view-tabs">
+        <button class="view-tab active" id="tab-temas" onclick="setView('temas')">📁 Temas</button>
+        <button class="view-tab" id="tab-lixeira" onclick="setView('lixeira')">🗑 Lixeira <span class="tab-badge" id="trash-count" style="display:none"></span></button>
+    </div>
+
+    <!-- Galeria de temas -->
+    <div id="temas-view">
+        <div class="temas-grid" id="temas-container"></div>
+    </div>
+
+    <!-- Editar descrição inline -->
+    <div class="tema-desc-edit-wrap" id="tema-desc-edit-wrap">
+        <textarea id="tema-desc-textarea" rows="2" placeholder="Descrição do tema..."></textarea>
+        <button class="btn-save" style="height:38px;padding:0 1rem;font-size:0.8rem" onclick="saveTemaDesc()">Salvar</button>
+        <button class="btn-cancel" style="height:38px;padding:0 0.75rem;font-size:0.8rem" onclick="closeTemaDescEdit()">Cancelar</button>
+    </div>
+
+    <!-- Detail bar + posts do tema -->
+    <div id="posts-view" style="display:none">
+        <div class="tema-detail-bar">
+            <button class="tema-back-btn" onclick="closeTema()">← Temas</button>
+            <div style="flex:1">
+                <div class="tema-detail-name" id="tema-detail-name"></div>
+                <div class="tema-detail-desc" id="tema-detail-desc"></div>
+            </div>
+            <button class="tema-edit-desc-btn" onclick="openTemaDescEdit()">✏ Descrição</button>
+        </div>
+
+    <div class="toolbar" id="toolbar-wrap">
+        <div class="search-wrap">
+            <span class="s-icon">🔑</span>
+            <input type="text" class="search-input" id="keyword-search" placeholder="Buscar por palavra-chave..." oninput="onSearch()">
+        </div>
+        <div id="keyword-insights" class="keyword-insights"></div>
+        <div class="filter-pills">
+            <div class="filter-pill-wrap">
+                <button class="filter-pill" id="pill-status" onclick="toggleMenu('status')">
+                    Status <span id="count-status" class="pill-count"></span>
+                    <span class="pill-arrow">▼</span>
+                </button>
+                <div class="filter-menu" id="menu-status">
+                    <div class="menu-item">
+                        <input type="checkbox" id="st-rascunho" value="Rascunho" onchange="onFilter()">
+                        <label for="st-rascunho">✏️ Rascunho</label>
+                    </div>
+                    <div class="menu-item">
+                        <input type="checkbox" id="st-pronto" value="Pronto" onchange="onFilter()">
+                        <label for="st-pronto">✓ Pronto</label>
+                    </div>
+                    <div class="menu-item">
+                        <input type="checkbox" id="st-usado" value="Usado" onchange="onFilter()">
+                        <label for="st-usado">★ Usado</label>
+                    </div>
+                    <div class="menu-divider"></div>
+                    <button class="menu-clear" onclick="clearGroup('status')">Limpar</button>
+                </div>
+            </div>
+
+            <div class="filter-pill-wrap">
+                <button class="filter-pill" id="pill-papel" onclick="toggleMenu('papel')">
+                    Papel <span id="count-papel" class="pill-count"></span>
+                    <span class="pill-arrow">▼</span>
+                </button>
+                <div class="filter-menu" id="menu-papel">
+                    <div class="menu-item">
+                        <input type="checkbox" id="p-mentor" value="Mentor" onchange="onFilter()">
+                        <label for="p-mentor">Mentor</label>
+                    </div>
+                    <div class="menu-item">
+                        <input type="checkbox" id="p-pensador" value="Pensador" onchange="onFilter()">
+                        <label for="p-pensador">Pensador</label>
+                    </div>
+                    <div class="menu-item">
+                        <input type="checkbox" id="p-professor" value="Professor" onchange="onFilter()">
+                        <label for="p-professor">Professor</label>
+                    </div>
+                    <div class="menu-item">
+                        <input type="checkbox" id="p-amigo" value="Amigo" onchange="onFilter()">
+                        <label for="p-amigo">Amigo</label>
+                    </div>
+                    <div class="menu-item">
+                        <input type="checkbox" id="p-soldado" value="Soldado" onchange="onFilter()">
+                        <label for="p-soldado">Soldado</label>
+                    </div>
+                    <div class="menu-divider"></div>
+                    <button class="menu-clear" onclick="clearGroup('papel')">Limpar</button>
+                </div>
+            </div>
+
+            <div class="filter-pill-wrap">
+                <button class="filter-pill" id="pill-formato" onclick="toggleMenu('formato')">
+                    Formato <span id="count-formato" class="pill-count"></span>
+                    <span class="pill-arrow">▼</span>
+                </button>
+                <div class="filter-menu" id="menu-formato">
+                    <div class="menu-item">
+                        <input type="checkbox" id="f-reels" value="Reels" onchange="onFilter()">
+                        <label for="f-reels">Reels</label>
+                    </div>
+                    <div class="menu-item">
+                        <input type="checkbox" id="f-stories" value="Stories" onchange="onFilter()">
+                        <label for="f-stories">Stories</label>
+                    </div>
+                    <div class="menu-item">
+                        <input type="checkbox" id="f-texto" value="Texto" onchange="onFilter()">
+                        <label for="f-texto">Texto</label>
+                    </div>
+                    <div class="menu-item">
+                        <input type="checkbox" id="f-shorts" value="Shorts" onchange="onFilter()">
+                        <label for="f-shorts">Shorts</label>
+                    </div>
+                    <div class="menu-item">
+                        <input type="checkbox" id="f-audio" value="Audio" onchange="onFilter()">
+                        <label for="f-audio">Audio</label>
+                    </div>
+                    <div class="menu-item">
+                        <input type="checkbox" id="f-video" value="Video" onchange="onFilter()">
+                        <label for="f-video">Video</label>
+                    </div>
+                    <div class="menu-divider"></div>
+                    <button class="menu-clear" onclick="clearGroup('formato')">Limpar</button>
+                </div>
+            </div>
+
+            <div class="filter-pill-wrap">
+                <button class="filter-pill" id="pill-plataforma" onclick="toggleMenu('plataforma')">
+                    Plataforma <span id="count-plataforma" class="pill-count"></span>
+                    <span class="pill-arrow">▼</span>
+                </button>
+                <div class="filter-menu" id="menu-plataforma">
+                    <div class="menu-item">
+                        <input type="checkbox" id="pl-instagram" value="Instagram" onchange="onFilter()">
+                        <label for="pl-instagram">Instagram</label>
+                    </div>
+                    <div class="menu-item">
+                        <input type="checkbox" id="pl-tiktok" value="TikTok" onchange="onFilter()">
+                        <label for="pl-tiktok">TikTok</label>
+                    </div>
+                    <div class="menu-item">
+                        <input type="checkbox" id="pl-youtube" value="YouTube" onchange="onFilter()">
+                        <label for="pl-youtube">YouTube</label>
+                    </div>
+                    <div class="menu-item">
+                        <input type="checkbox" id="pl-spotify" value="Spotify" onchange="onFilter()">
+                        <label for="pl-spotify">Spotify</label>
+                    </div>
+                    <div class="menu-divider"></div>
+                    <button class="menu-clear" onclick="clearGroup('plataforma')">Limpar</button>
+                </div>
+            </div>
+
+            <div class="filter-pill-wrap">
+                <button class="filter-pill" id="pill-funil" onclick="toggleMenu('funil')">
+                    Funil <span id="count-funil" class="pill-count"></span>
+                    <span class="pill-arrow">▼</span>
+                </button>
+                <div class="filter-menu" id="menu-funil">
+                    <div class="menu-item">
+                        <input type="checkbox" id="fn-atracao" value="Atração" onchange="onFilter()">
+                        <label for="fn-atracao">🟢 Atração</label>
+                    </div>
+                    <div class="menu-item">
+                        <input type="checkbox" id="fn-qualificacao" value="Qualificação" onchange="onFilter()">
+                        <label for="fn-qualificacao">🟡 Qualificação</label>
+                    </div>
+                    <div class="menu-item">
+                        <input type="checkbox" id="fn-conversao" value="Conversão" onchange="onFilter()">
+                        <label for="fn-conversao">🔴 Conversão</label>
+                    </div>
+                    <div class="menu-divider"></div>
+                    <button class="menu-clear" onclick="clearGroup('funil')">Limpar</button>
+                </div>
+            </div>
+
+            <button class="filter-pill" id="btn-clear-all" style="display:none;background:var(--danger);color:white;border-color:var(--danger)" onclick="clearAllFilters()">✕ Limpar tudo</button>
+
+            <div style="margin-left:auto;display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap">
+                <button id="btn-compact" class="view-toggle-btn" onclick="toggleCompact()" title="Modo compacto">⊟ Compacto</button>
+                <span style="font-size:0.7rem;color:var(--gray-400)">Ordenar:</span>
+                <select id="sort-select" onchange="renderPosts()" style="height:30px;border:1.5px solid var(--gray-300);border-radius:20px;background:white;font-size:0.75rem;font-weight:600;color:var(--gray-600);padding:0 0.7rem;cursor:pointer;outline:none;">
+                    <option value="recent">Mais recente</option>
+                    <option value="oldest">Mais antigo</option>
+                    <option value="title_az">Título A→Z</option>
+                    <option value="title_za">Título Z→A</option>
+                    <option value="status">Status</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="posts-grid" id="posts-container">
+            <div class="loading">Carregando posts...</div>
+        </div>
+    </div>
+    </div><!-- /posts-view -->
+
+    <div class="content" id="lixeira-view" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:0.75rem;background:white;border-radius:8px;padding:0.6rem 0.875rem;border:1px solid var(--gray-200)">
+            <span style="font-size:0.78rem;color:var(--gray-500)">🗑 Posts excluídos ficam aqui por <strong>15 dias</strong> e depois são apagados permanentemente.</span>
+            <button onclick="deleteAllLixeira()" style="white-space:nowrap;padding:0.35rem 0.875rem;border-radius:6px;border:1px solid #fca5a5;background:#fee2e2;color:var(--danger);font-size:0.75rem;font-weight:700;cursor:pointer">🗑 Apagar tudo</button>
+        </div>
+        <div class="posts-grid" id="lixeira-container"></div>
+    </div>
+
+    <!-- Modal para novo/editar post -->
+    <div class="modal-overlay" id="modal-overlay" style="display:none" onclick="handleOverlayClick(event)">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-title">Novo Post</h2>
+                <button class="btn-close" onclick="closeModal()">✕</button>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Título *</label>
+                <input type="text" class="form-input" id="m-titulo" placeholder="Título do post">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Conteúdo</label>
+                <div class="rte-wrap">
+                    <div class="rte-toolbar">
+                        <button onclick="rte('bold','m-conteudo')" title="Negrito"><b>B</b></button>
+                        <button onclick="rte('italic','m-conteudo')" title="Itálico"><i>I</i></button>
+                        <button onclick="rte('underline','m-conteudo')" title="Sublinhado"><u>U</u></button>
+                        <div class="rte-sep"></div>
+                        <select onchange="rte('fontSize',this.value,'m-conteudo');this.value=''" title="Tamanho">
+                            <option value="">Tam.</option>
+                            <option value="1">Pequeno</option>
+                            <option value="3">Normal</option>
+                            <option value="5">Grande</option>
+                            <option value="7">Enorme</option>
+                        </select>
+                        <input type="color" value="#000000" oninput="rte('foreColor',this.value,'m-conteudo')" title="Cor do texto">
+                        <div class="rte-sep"></div>
+                        <button onclick="rte('justifyLeft','m-conteudo')" title="Alinhar esquerda">&#8676;</button>
+                        <button onclick="rte('justifyCenter','m-conteudo')" title="Centralizar">&#8801;</button>
+                        <button onclick="rte('justifyRight','m-conteudo')" title="Alinhar direita">&#8677;</button>
+                        <button onclick="rte('justifyFull','m-conteudo')" title="Justificar">&#9776;</button>
+                        <div class="rte-sep"></div>
+                        <button onclick="rte('removeFormat','m-conteudo')" title="Limpar formatação">&#10006;</button>
+                    </div>
+                    <div class="rte-content" id="m-conteudo" contenteditable="true" data-placeholder="Escreva o conteúdo do post"></div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Papel</label>
+                    <select class="form-select" id="m-papel">
+                        <option value="">Selecionar...</option>
+                        <option value="Mentor">Mentor</option>
+                        <option value="Pensador">Pensador</option>
+                        <option value="Professor">Professor</option>
+                        <option value="Amigo">Amigo</option>
+                        <option value="Soldado">Soldado</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tema</label>
+                    <input type="text" class="form-input" id="m-tema" list="temas-list" placeholder="Digite ou selecione">
+                    <datalist id="temas-list"></datalist>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Formato</label>
+                    <select class="form-select" id="m-formato">
+                        <option value="">Selecionar...</option>
+                        <option value="Reels">Reels</option>
+                        <option value="Stories">Stories</option>
+                        <option value="Texto">Texto</option>
+                        <option value="Shorts">Shorts</option>
+                        <option value="Audio">Audio</option>
+                        <option value="Video">Video</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Plataforma</label>
+                    <select class="form-select" id="m-plataforma">
+                        <option value="">Selecionar...</option>
+                        <option value="Instagram">Instagram</option>
+                        <option value="TikTok">TikTok</option>
+                        <option value="YouTube">YouTube</option>
+                        <option value="Spotify">Spotify</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="m-status">
+                        <option value="Rascunho">Rascunho</option>
+                        <option value="Pronto">Pronto</option>
+                        <option value="Usado">Usado</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Fase do Funil</label>
+                    <select class="form-select" id="m-funil">
+                        <option value="">Selecionar...</option>
+                        <option value="Atração">🟢 Atração</option>
+                        <option value="Qualificação">🟡 Qualificação</option>
+                        <option value="Conversão">🔴 Conversão</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Data</label>
+                <input type="date" class="form-input" id="m-data">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">🔗 Link da postagem</label>
+                <input type="url" class="form-input" id="m-link" placeholder="https://...">
+            </div>
+
+            <div class="section-divider">Métricas de Engajamento</div>
+
+            <div class="metrics-grid">
+                <div class="form-group">
+                    <label class="form-label">👁 Visualizações</label>
+                    <input type="number" class="form-input" id="m-visualizacoes" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">❤️ Curtidas</label>
+                    <input type="number" class="form-input" id="m-curtidas" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">🔁 Compartilhamentos</label>
+                    <input type="number" class="form-input" id="m-compartilhamentos" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">💬 Comentários</label>
+                    <input type="number" class="form-input" id="m-comentarios" placeholder="0">
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+                <button class="btn-save" id="btn-save" onclick="savePost()">Salvar Post</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para importar -->
+    <div class="modal-overlay" id="import-overlay" style="display:none" onclick="handleImportOverlayClick(event)">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">⬇ Importar do Claude</h2>
+                <button class="btn-close" onclick="closeImport()">✕</button>
+            </div>
+
+            <!-- Zona drag & drop para Word -->
+            <div class="drop-zone" id="drop-zone"
+                ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)"
+                onclick="document.getElementById('file-input').click()">
+                <div class="drop-icon">📄</div>
+                <p><strong>Arraste um arquivo Word (.docx) aqui</strong></p>
+                <p>ou <button class="btn-select" onclick="event.stopPropagation();document.getElementById('file-input').click()">selecione o arquivo</button></p>
+                <input type="file" id="file-input" accept=".docx" style="display:none" onchange="handleFileSelect(event)">
+            </div>
+
+            <!-- Preview de posts encontrados no Word -->
+            <div id="docx-preview-wrap" style="display:none">
+                <div class="docx-tema-global">
+                    <label>Tema do arquivo</label>
+                    <input id="docx-global-tema" list="docx-temas-list" placeholder="Ex: Diretora, Empreendedores..." autocomplete="off">
+                    <label style="margin-top:0.25rem">Descrição do tema <span style="font-weight:400;opacity:0.7">(opcional)</span></label>
+                    <textarea id="docx-global-desc" rows="2" placeholder="Sobre o que é esse tema? Para qual público?"></textarea>
+                </div>
+                <div class="docx-preview">
+                    <div class="docx-preview-header">
+                        <span id="docx-preview-count"></span>
+                        <label style="cursor:pointer;font-weight:600">
+                            <input type="checkbox" id="check-all" onchange="toggleAllDocx(this.checked)" style="accent-color:var(--primary-dark);margin-right:4px">
+                            Selecionar todos
+                        </label>
+                    </div>
+                    <div id="docx-posts-list"></div>
+                </div>
+                <div class="modal-footer" style="padding-top:0;border-top:none;margin-top:0">
+                    <button class="btn-cancel" onclick="closeImport()">Cancelar</button>
+                    <button class="btn-save" id="btn-import-docx" onclick="importarDocx()">⬇ Importar selecionados</button>
+                </div>
+            </div>
+
+            <div id="import-text-wrap">
+                <div class="import-separator">— ou cole o texto —</div>
+                <p class="import-hint">Cole qualquer texto gerado no Claude. O app detecta automaticamente título, papel, tema e plataforma.</p>
+
+                <div class="form-group">
+                    <label class="form-label">Texto copiado do Claude</label>
+                    <textarea class="form-textarea" id="import-texto" placeholder="Cole aqui..." style="min-height:120px" oninput="previewParse()"></textarea>
+                </div>
+
+                <div class="parsed-preview" id="parsed-preview"></div>
+
+                <div class="modal-footer">
+                    <button class="btn-cancel" onclick="closeImport()">Cancelar</button>
+                    <button class="btn-save" onclick="importarPost()">Continuar →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal editar conteúdo (simplificado) -->
+    <div class="modal-overlay" id="content-overlay" style="display:none" onclick="handleContentOverlayClick(event)">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">✏️ Editar Conteúdo</h2>
+                <button class="btn-close" onclick="closeContentModal()">✕</button>
+            </div>
+            <div class="content-modal-body">
+                <div class="form-group">
+                    <label class="form-label">Título *</label>
+                    <input type="text" class="form-input" id="ce-titulo" placeholder="Título do post">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Conteúdo</label>
+                    <div class="rte-wrap">
+                        <div class="rte-toolbar">
+                            <button onclick="rte('bold','ce-conteudo')" title="Negrito"><b>B</b></button>
+                            <button onclick="rte('italic','ce-conteudo')" title="Itálico"><i>I</i></button>
+                            <button onclick="rte('underline','ce-conteudo')" title="Sublinhado"><u>U</u></button>
+                            <div class="rte-sep"></div>
+                            <select onchange="rte('fontSize',this.value,'ce-conteudo');this.value=''" title="Tamanho">
+                                <option value="">Tam.</option>
+                                <option value="1">Pequeno</option>
+                                <option value="3">Normal</option>
+                                <option value="5">Grande</option>
+                                <option value="7">Enorme</option>
+                            </select>
+                            <input type="color" value="#000000" oninput="rte('foreColor',this.value,'ce-conteudo')" title="Cor do texto">
+                            <div class="rte-sep"></div>
+                            <button onclick="rte('justifyLeft','ce-conteudo')" title="Alinhar esquerda">&#8676;</button>
+                            <button onclick="rte('justifyCenter','ce-conteudo')" title="Centralizar">&#8801;</button>
+                            <button onclick="rte('justifyRight','ce-conteudo')" title="Alinhar direita">&#8677;</button>
+                            <button onclick="rte('justifyFull','ce-conteudo')" title="Justificar">&#9776;</button>
+                            <div class="rte-sep"></div>
+                            <button onclick="rte('removeFormat','ce-conteudo')" title="Limpar formatação">&#10006;</button>
+                        </div>
+                        <div class="rte-content" id="ce-conteudo" contenteditable="true" data-placeholder="Texto completo do post..."></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeContentModal()">Cancelar</button>
+                <button class="btn-save" id="btn-save-content" onclick="saveContent()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal teleprompter -->
+    <div class="modal-overlay" id="teleprompter-overlay" style="display:none" onclick="handleTeleprompterOverlayClick(event)">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="tp-titulo-header">📋 Texto para leitura</h2>
+                <button class="btn-close" onclick="closeTeleprompter()">✕</button>
+            </div>
+            <div class="copy-bar">
+                <span id="tp-char-count"></span>
+                <button class="btn-save" style="font-size:0.78rem;padding:0.35rem 0.875rem" id="btn-save-tp" onclick="saveTeleprompter()">💾 Salvar</button>
+                <button class="btn-copy" id="btn-copy-tp" onclick="copyTeleprompter()">📋 Copiar texto</button>
+            </div>
+            <div style="height:0.75rem"></div>
+            <div class="rte-wrap">
+                <div class="rte-toolbar">
+                    <button onclick="rte('bold','tp-text')" title="Negrito"><b>B</b></button>
+                    <button onclick="rte('italic','tp-text')" title="Itálico"><i>I</i></button>
+                    <button onclick="rte('underline','tp-text')" title="Sublinhado"><u>U</u></button>
+                    <div class="rte-sep"></div>
+                    <select onchange="rte('fontSize',this.value,'tp-text');this.value=''" title="Tamanho">
+                        <option value="">Tam.</option>
+                        <option value="1">Pequeno</option>
+                        <option value="3">Normal</option>
+                        <option value="5">Grande</option>
+                        <option value="7">Enorme</option>
+                    </select>
+                    <input type="color" value="#000000" oninput="rte('foreColor',this.value,'tp-text')" title="Cor do texto">
+                    <div class="rte-sep"></div>
+                    <button onclick="rte('justifyLeft','tp-text')" title="Esquerda">&#8676;</button>
+                    <button onclick="rte('justifyCenter','tp-text')" title="Centralizar">&#8801;</button>
+                    <button onclick="rte('justifyRight','tp-text')" title="Direita">&#8677;</button>
+                    <button onclick="rte('justifyFull','tp-text')" title="Justificar">&#9776;</button>
+                    <div class="rte-sep"></div>
+                    <button onclick="rte('removeFormat','tp-text')" title="Limpar formatação">&#10006;</button>
+                </div>
+                <div class="teleprompter-text rte-content" id="tp-text" contenteditable="true"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeTeleprompter()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login overlay -->
+    <div class="login-overlay" id="login-overlay">
+        <div class="login-box">
+            <div class="login-logo">
+                <h1>Organizador de Posts</h1>
+                <p>Entre para acessar seus roteiros</p>
+            </div>
+            <div class="login-field">
+                <label>E-mail</label>
+                <input type="email" id="login-email" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')doLogin()">
+            </div>
+            <div class="login-field">
+                <label>Senha</label>
+                <input type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+            </div>
+            <div class="login-error" id="login-error"></div>
+            <button class="login-btn" id="login-btn" onclick="doLogin()">Entrar</button>
+            <div class="login-signup" id="login-mode-toggle">
+                Não tem conta? <a onclick="toggleLoginMode()">Criar conta</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://xtiwsdoulsmkkmztpsji.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0aXdzZG91bHNta2ttenRwc2ppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwOTY2NDUsImV4cCI6MjA5MTY3MjY0NX0.IrCBJPhY_xGQky4EW9aOw5NgWzcn2sYlEmhO3xJA380';
+        const { createClient } = supabase;
+        const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let posts = [];
+        let editingId = null;
+        let openMenuId = null;
+        let compactMode = false;
+        let selectedTema = null;
+        let temaDescriptions = JSON.parse(localStorage.getItem('tema_descriptions') || '{}');
+
+        const TEMA_GRADIENTS = [
+            'linear-gradient(135deg,#667eea,#764ba2)',
+            'linear-gradient(135deg,#f5576c,#f093fb)',
+            'linear-gradient(135deg,#4facfe,#00c6ff)',
+            'linear-gradient(135deg,#43e97b,#38f9d7)',
+            'linear-gradient(135deg,#fa709a,#fee140)',
+            'linear-gradient(135deg,#30cfd0,#330867)',
+            'linear-gradient(135deg,#f77062,#fe5196)',
+            'linear-gradient(135deg,#6a11cb,#2575fc)',
+            'linear-gradient(135deg,#f83600,#f9d423)',
+            'linear-gradient(135deg,#0f3460,#533483)',
+        ];
+        function getTemaGradient(nome) {
+            let h = 0;
+            for (let i = 0; i < nome.length; i++) h = (h * 31 + nome.charCodeAt(i)) & 0x7fffffff;
+            return TEMA_GRADIENTS[h % TEMA_GRADIENTS.length];
+        }
+
+        function toggleCompact() {
+            compactMode = !compactMode;
+            document.getElementById('posts-container').classList.toggle('compact', compactMode);
+            const btn = document.getElementById('btn-compact');
+            btn.classList.toggle('active', compactMode);
+            btn.textContent = compactMode ? '⊟ Normal' : '⊟ Compacto';
+        }
+
+        // ─── Navegação de temas ───────────────────────────────
+        function openTema(nome) {
+            selectedTema = nome;
+            document.getElementById('tema-detail-name').textContent = nome;
+            const desc = temaDescriptions[nome] || '';
+            const descEl = document.getElementById('tema-detail-desc');
+            descEl.textContent = desc;
+            descEl.style.display = desc ? 'block' : 'none';
+            setView('tema-posts');
+            renderPosts();
+        }
+
+        function closeTema() {
+            selectedTema = null;
+            closeTemaDescEdit();
+            setView('temas');
+        }
+
+        function openTemaDescEdit() {
+            const wrap = document.getElementById('tema-desc-edit-wrap');
+            document.getElementById('tema-desc-textarea').value = temaDescriptions[selectedTema] || '';
+            wrap.classList.add('open');
+        }
+
+        function closeTemaDescEdit() {
+            document.getElementById('tema-desc-edit-wrap').classList.remove('open');
+        }
+
+        function saveTemaDesc() {
+            const desc = document.getElementById('tema-desc-textarea').value.trim();
+            if (selectedTema) {
+                temaDescriptions[selectedTema] = desc;
+                localStorage.setItem('tema_descriptions', JSON.stringify(temaDescriptions));
+                const descEl = document.getElementById('tema-detail-desc');
+                descEl.textContent = desc;
+                descEl.style.display = desc ? 'block' : 'none';
+            }
+            closeTemaDescEdit();
+            showToast('✓ Descrição salva!');
+        }
+
+        // ─── Render galeria de temas ──────────────────────────
+        function renderThemes() {
+            const ativos = posts.filter(p => p.status !== 'Lixeira');
+            const grupos = {};
+            ativos.forEach(p => {
+                const t = p.tema || '(Sem tema)';
+                if (!grupos[t]) grupos[t] = { total: 0, rascunho: 0, pronto: 0, usado: 0 };
+                grupos[t].total++;
+                const s = (p.status || 'Rascunho').toLowerCase();
+                if (grupos[t][s] !== undefined) grupos[t][s]++;
+            });
+
+            const container = document.getElementById('temas-container');
+            const temasSorted = Object.keys(grupos).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+            if (!temasSorted.length) {
+                container.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+                    <div class="icon">📁</div>
+                    <p>Nenhum post ainda.<br>Importe um arquivo ou crie o primeiro post!</p>
+                </div>`;
+                return;
+            }
+
+            container.innerHTML = temasSorted.map(nome => {
+                const g = grupos[nome];
+                const grad = getTemaGradient(nome);
+                const desc = temaDescriptions[nome] || '';
+                const pills = [];
+                if (g.rascunho) pills.push(`<span class="tema-status-pill">✏ ${g.rascunho}</span>`);
+                if (g.pronto)   pills.push(`<span class="tema-status-pill">✓ ${g.pronto}</span>`);
+                if (g.usado)    pills.push(`<span class="tema-status-pill">★ ${g.usado}</span>`);
+                return `
+                <div class="tema-card" style="background:${grad}" onclick="openTema('${esc(nome)}')">
+                    <button class="tema-edit-btn" onclick="event.stopPropagation();openTemaEdit('${esc(nome)}')" title="Editar descrição">✏</button>
+                    <div class="tema-card-body">
+                        <div class="tema-card-icon">📁</div>
+                        <h2 class="tema-card-name">${esc(nome)}</h2>
+                        ${desc ? `<p class="tema-card-desc">${esc(desc)}</p>` : `<p class="tema-card-desc" style="opacity:0.5;font-style:italic">Clique em ✏ para adicionar uma descrição</p>`}
+                        <div class="tema-card-footer">
+                            <span class="tema-card-count">${g.total} roteiro${g.total !== 1 ? 's' : ''}</span>
+                            <div class="tema-status-pills">${pills.join('')}</div>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function openTemaEdit(nome) {
+            selectedTema = nome;
+            openTema(nome);
+            setTimeout(() => openTemaDescEdit(), 50);
+        }
+
+        document.getElementById('header-date').textContent = new Date().toLocaleDateString('pt-BR', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+
+        // Rich Text Editor
+        function rte(cmd, value, targetId) {
+            // If value is an element id (2-arg call), shift args
+            if (targetId === undefined && typeof value === 'string' && document.getElementById(value)) {
+                targetId = value; value = null;
+            }
+            const el = document.getElementById(targetId);
+            if (el) el.focus();
+            document.execCommand(cmd, false, value || null);
+        }
+
+        // Markdown → HTML (para import do Claude)
+        function markdownToHtml(text) {
+            if (!text) return '';
+            return text
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                .replace(/^#{3}\s+(.+)$/gm, '<strong><u>$1</u></strong>')
+                .replace(/^#{1,2}\s+(.+)$/gm, '<strong>$1</strong>')
+                .replace(/^[-*]\s+(.+)$/gm, '• $1')
+                .replace(/\n/g, '<br>');
+        }
+
+        // Renderiza conteúdo no card — suporta texto puro (legado) e HTML
+        function renderContent(content) {
+            if (!content) return '';
+            // Remove parágrafos iniciais que são só um número solto (artefato de importação)
+            content = content.replace(/^(\s*<[^>]+>\s*\d{1,3}\s*<\/[^>]+>\s*)+/i, '').trim();
+            if (!/<[a-z]/i.test(content)) {
+                // Texto puro: escapa e converte quebras de linha
+                return esc(content).replace(/\n/g, '<br>');
+            }
+            return sanitizeHtml(content);
+        }
+
+        // Sanitiza HTML — remove tags perigosas, mantém formatação
+        function sanitizeHtml(html) {
+            const allowed = /^(b|strong|i|em|u|br|span|div|p|font|h[1-6])$/i;
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            tmp.querySelectorAll('*').forEach(el => {
+                if (!allowed.test(el.tagName)) {
+                    el.replaceWith(...el.childNodes);
+                }
+            });
+            // Remove script/event attrs
+            tmp.querySelectorAll('*').forEach(el => {
+                [...el.attributes].forEach(attr => {
+                    if (attr.name.startsWith('on')) el.removeAttribute(attr.name);
+                });
+            });
+            return tmp.innerHTML;
+        }
+
+        // Load posts
+        async function loadPosts() {
+            await cleanupLixeira();
+            const { data, error } = await db.from('posts').select('*').order('created_at', { ascending: false });
+            if (error) {
+                console.error(error);
+                document.getElementById('posts-container').innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>Erro ao conectar. Verifique o console.</p></div>';
+                return;
+            }
+            posts = data || [];
+            // Atualiza badge da lixeira
+            const lixeiraCount = posts.filter(p => p.status === 'Lixeira').length;
+            const badge = document.getElementById('trash-count');
+            badge.textContent = lixeiraCount || '';
+            badge.style.display = lixeiraCount ? 'inline-block' : 'none';
+            // Re-renderiza a view atual
+            if (viewMode === 'lixeira') renderLixeira();
+            else if (viewMode === 'tema-posts') renderPosts();
+            else renderThemes();
+            updateStats();
+        }
+
+        // Update stats (exclui lixeira)
+        function updateStats() {
+            const ativos = posts.filter(p => p.status !== 'Lixeira');
+            document.getElementById('stat-total').textContent = ativos.length;
+            document.getElementById('stat-prontos').textContent = ativos.filter(p => p.status === 'Pronto').length;
+            document.getElementById('stat-usados').textContent = ativos.filter(p => p.status === 'Usado').length;
+        }
+
+        // Update tema menu dynamically
+        function updateTemasList() {
+            const el = document.getElementById('temas-list');
+            if (!el) return;
+            const temas = [...new Set(posts.filter(p => p.status !== 'Lixeira').map(p => p.tema).filter(Boolean))].sort();
+            el.innerHTML = temas.map(t => `<option value="${esc(t)}">`).join('');
+        }
+
+        // Filter groups
+        const GROUPS = {
+            status:    { pill: 'pill-status',    menu: 'menu-status',    inputs: () => document.querySelectorAll('#menu-status input[type=checkbox]') },
+            papel:     { pill: 'pill-papel',     menu: 'menu-papel',     inputs: () => document.querySelectorAll('#menu-papel input[type=checkbox]') },
+            formato:   { pill: 'pill-formato',   menu: 'menu-formato',   inputs: () => document.querySelectorAll('#menu-formato input[type=checkbox]') },
+            plataforma:{ pill: 'pill-plataforma',menu: 'menu-plataforma',inputs: () => document.querySelectorAll('#menu-plataforma input[type=checkbox]') },
+            funil:     { pill: 'pill-funil',     menu: 'menu-funil',     inputs: () => document.querySelectorAll('#menu-funil input[type=checkbox]') },
+        };
+
+        function toggleMenu(group) {
+            const menu = document.getElementById(GROUPS[group].menu);
+            const pill = document.getElementById(GROUPS[group].pill);
+            const isOpen = menu.classList.contains('open');
+            closeAllMenus();
+            if (!isOpen) {
+                menu.classList.add('open');
+                pill.classList.add('open');
+                openMenuId = group;
+            }
+        }
+
+        function closeAllMenus() {
+            Object.values(GROUPS).forEach(g => {
+                document.getElementById(g.menu).classList.remove('open');
+                document.getElementById(g.pill).classList.remove('open');
+            });
+            openMenuId = null;
+        }
+
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.filter-pill-wrap')) closeAllMenus();
+        });
+
+        function getChecked(group) {
+            return [...GROUPS[group].inputs()].filter(el => el.checked).map(el => el.value);
+        }
+
+        function updatePillState(group) {
+            const checked = getChecked(group);
+            const pill = document.getElementById(GROUPS[group].pill);
+            const badge = document.getElementById('count-' + group);
+            if (checked.length) {
+                pill.classList.add('has-selection');
+                badge.textContent = checked.length;
+                badge.style.display = 'inline';
+            } else {
+                pill.classList.remove('has-selection');
+                badge.style.display = 'none';
+            }
+        }
+
+        function clearGroup(group) {
+            GROUPS[group].inputs().forEach(el => el.checked = false);
+            onFilter();
+        }
+
+        function clearAllFilters() {
+            Object.keys(GROUPS).forEach(clearGroup);
+            document.getElementById('keyword-search').value = '';
+            document.getElementById('keyword-insights').innerHTML = '';
+            renderPosts();
+        }
+
+        function updateClearAllBtn() {
+            const hasAny = Object.keys(GROUPS).some(g => getChecked(g).length > 0) || document.getElementById('keyword-search').value.trim();
+            document.getElementById('btn-clear-all').style.display = hasAny ? 'inline-flex' : 'none';
+        }
+
+        function onFilter() {
+            Object.keys(GROUPS).forEach(updatePillState);
+            updateClearAllBtn();
+            renderPosts();
+        }
+
+        // Search and keyword insights
+        function onSearch() {
+            const kw = document.getElementById('keyword-search').value.trim().toLowerCase();
+            const container = document.getElementById('keyword-insights');
+            if (kw.length >= 2) {
+                const temaCount = {};
+                posts.forEach(p => {
+                    const text = ((p.titulo||'') + ' ' + (p.conteudo||'')).toLowerCase();
+                    if (text.includes(kw) && p.tema) {
+                        temaCount[p.tema] = (temaCount[p.tema] || 0) + 1;
+                    }
+                });
+                const entries = Object.entries(temaCount).sort((a,b) => b[1]-a[1]);
+                if (entries.length) {
+                    container.innerHTML = '<span style="font-size:0.67rem;color:var(--gray-500);margin-right:0.2rem">Temas:</span>' +
+                        entries.map(([tema, n]) => `<span class="insight-chip" onclick="openTema('${esc(tema)}')">${esc(tema)} (${n})</span>`).join('');
+                } else {
+                    container.innerHTML = '<span style="font-size:0.72rem;color:var(--gray-400)">Nenhum tema encontrado</span>';
+                }
+            } else {
+                container.innerHTML = '';
+            }
+            updateClearAllBtn();
+            renderPosts();
+        }
+
+
+        // Render posts
+        function renderPosts() {
+            const kw = document.getElementById('keyword-search').value.trim().toLowerCase();
+            const fStatus = getChecked('status');
+            const fPapel  = getChecked('papel');
+            const fFmt    = getChecked('formato');
+            const fPlat   = getChecked('plataforma');
+            const fFunil  = getChecked('funil');
+
+            const filtered = posts.filter(p => p.status !== 'Lixeira').filter(p => {
+                // Filtra sempre pelo tema selecionado na navegação
+                const temaDoPost = p.tema || '(Sem tema)';
+                if (selectedTema && temaDoPost !== selectedTema) return false;
+                if (kw) {
+                    const text = ((p.titulo||'') + ' ' + (p.conteudo||'')).toLowerCase();
+                    if (!text.includes(kw)) return false;
+                }
+                if (fStatus.length && !fStatus.includes(p.status || 'Rascunho')) return false;
+                if (fPapel.length  && !fPapel.includes(p.papel))    return false;
+                if (fFmt.length    && !fFmt.includes(p.formato))    return false;
+                if (fPlat.length   && !fPlat.includes(p.plataforma)) return false;
+                if (fFunil.length  && !fFunil.includes(p.funil))    return false;
+                return true;
+            });
+
+            // Ordenação
+            const sort = document.getElementById('sort-select').value;
+            const statusOrder = { 'Rascunho': 0, 'Pronto': 1, 'Usado': 2 };
+            filtered.sort((a, b) => {
+                switch (sort) {
+                    case 'oldest':  return new Date(a.created_at) - new Date(b.created_at);
+                    case 'title_az': return (a.titulo||'').localeCompare(b.titulo||'', 'pt-BR');
+                    case 'title_za': return (b.titulo||'').localeCompare(a.titulo||'', 'pt-BR');
+                    case 'status':  return (statusOrder[a.status]||0) - (statusOrder[b.status]||0);
+                    default:        return new Date(b.created_at) - new Date(a.created_at);
+                }
+            });
+
+            const container = document.getElementById('posts-container');
+            if (!filtered.length) {
+                container.innerHTML = `<div class="empty-state">
+                    <div class="icon">${posts.length === 0 ? '✍️' : '🔍'}</div>
+                    <p>${posts.length === 0 ? 'Nenhum post ainda.<br>Crie o primeiro clicando em + Novo Post!' : 'Nenhum post encontrado com esses filtros.'}</p>
+                </div>`;
+                return;
+            }
+            container.innerHTML = filtered.map(cardHTML).join('');
+        }
+
+        // Card HTML
+        const STATUS_STYLE = {
+            'Rascunho': { cls: 'rascunho', icon: '✏️' },
+            'Pronto': { cls: 'pronto', icon: '✓' },
+            'Usado': { cls: 'usado', icon: '★' },
+        };
+
+        function cardHTML(p) {
+            const hasMetrics = p.visualizacoes || p.curtidas || p.compartilhamentos || p.comentarios;
+            const data = p.data_publicacao ? new Date(p.data_publicacao+'T12:00:00').toLocaleDateString('pt-BR') : '';
+            const st = STATUS_STYLE[p.status] || STATUS_STYLE['Rascunho'];
+            const domain = p.link_postagem ? (() => {
+                try {
+                    return new URL(p.link_postagem).hostname.replace('www.','');
+                } catch(e) {
+                    return '🔗 link';
+                }
+            })() : '';
+
+            // Se o título gravado é só um número, extrai o título real da primeira linha do conteúdo
+            let displayTitle = p.titulo || '';
+            let displayConteudo = p.conteudo || '';
+            if (/^\d{1,3}$/.test(displayTitle.trim()) && displayConteudo) {
+                const tmp = document.createElement('div');
+                tmp.innerHTML = displayConteudo;
+                const first = tmp.firstElementChild;
+                if (first && first.textContent.trim()) {
+                    displayTitle = first.textContent.trim();
+                    first.remove();
+                    displayConteudo = tmp.innerHTML;
+                }
+            }
+
+            return `
+                <div class="post-card ${st.cls}">
+                    <div class="card-header">
+                        <div style="display:flex;flex-direction:column;gap:0.25rem;flex:1;min-width:0">
+                            ${p.tema ? `<span class="card-tema-badge">${esc(p.tema)}</span>` : ''}
+                            <div class="card-title">${esc(displayTitle)}</div>
+                        </div>
+                        <span class="status-badge ${st.cls}">${st.icon} ${p.status||'Rascunho'}</span>
+                    </div>
+                    ${displayConteudo ? `<div class="card-content" onclick="this.classList.toggle('expanded')" title="Clique para expandir/recolher">${renderContent(displayConteudo)}</div>` : ''}
+                    ${(p.papel||p.plataforma||p.formato||p.funil) ? `
+                        <div class="card-tags">
+                            ${p.papel ? `<span class="tag tag-papel">${esc(p.papel)}</span>` : ''}
+                            ${p.funil ? `<span class="tag tag-funil">${esc(p.funil)}</span>` : ''}
+                            ${p.plataforma ? `<span class="tag tag-plataforma">${esc(p.plataforma)}</span>` : ''}
+                            ${p.formato ? `<span class="tag tag-formato">${esc(p.formato)}</span>` : ''}
+                        </div>
+                    ` : ''}
+                    <div class="card-meta">
+                        ${data ? `<span>📅 ${data}</span>` : ''}
+                        ${p.link_postagem ? `<a class="card-link" href="${esc(p.link_postagem)}" target="_blank" rel="noopener">🔗 ${esc(domain)}</a>` : ''}
+                    </div>
+                    ${hasMetrics ? `
+                        <div class="card-metrics">
+                            <div class="metric"><div class="metric-value">${fmt(p.visualizacoes)}</div><div class="metric-label">Views</div></div>
+                            <div class="metric"><div class="metric-value">${fmt(p.curtidas)}</div><div class="metric-label">Likes</div></div>
+                            <div class="metric"><div class="metric-value">${fmt(p.compartilhamentos)}</div><div class="metric-label">Shares</div></div>
+                            <div class="metric"><div class="metric-value">${fmt(p.comentarios)}</div><div class="metric-label">Coment.</div></div>
+                        </div>
+                    ` : ''}
+                    <div class="card-actions">
+                        ${p.status !== 'Rascunho' ? `<button class="btn-sm neutral" onclick="setStatus('${p.id}','Rascunho')">✏️</button>` : ''}
+                        ${p.status !== 'Pronto' ? `<button class="btn-sm blue" onclick="setStatus('${p.id}','Pronto')">✓ Pronto</button>` : ''}
+                        ${p.status !== 'Usado' ? `<button class="btn-sm success" onclick="setStatus('${p.id}','Usado')">★ Usado</button>` : ''}
+                        <div class="card-actions-divider"></div>
+                        <button class="btn-sm" onclick="openContentModal('${p.id}')" title="Editar texto">✏️ Editar</button>
+                        <button class="btn-sm" onclick="openModal('${p.id}')" title="Configurações do post">⚙️ Config</button>
+                        ${p.conteudo ? `<button class="btn-sm teleprompter" onclick="openTeleprompter('${p.id}')" title="Copiar texto para teleprompter">📋 Texto</button>` : ''}
+                        <button class="btn-sm danger" onclick="deletePost('${p.id}')">🗑</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function fmt(n) {
+            if (!n) return '—';
+            if (n>=1e6) return (n/1e6).toFixed(1)+'M';
+            if (n>=1e3) return (n/1e3).toFixed(1)+'k';
+            return n;
+        }
+
+        function esc(s) {
+            if (!s) return '';
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // Modal
+        function openModal(id = null) {
+            editingId = id;
+            document.getElementById('modal-title').textContent = id ? 'Editar Post' : 'Novo Post';
+            document.getElementById('btn-save').disabled = false;
+            const fields = ['m-titulo','m-conteudo','m-papel','m-tema','m-formato','m-plataforma','m-data','m-link','m-visualizacoes','m-curtidas','m-compartilhamentos','m-comentarios'];
+            if (id) {
+                const p = posts.find(x => x.id === id);
+                if (!p) return;
+                document.getElementById('m-titulo').value = p.titulo || '';
+                const mc = p.conteudo || '';
+                document.getElementById('m-conteudo').innerHTML = /<[a-z]/i.test(mc)
+                    ? mc
+                    : mc.replace(/\n/g, '<br>');
+                document.getElementById('m-papel').value = p.papel || '';
+                document.getElementById('m-tema').value = p.tema || '';
+                document.getElementById('m-formato').value = p.formato || '';
+                document.getElementById('m-plataforma').value = p.plataforma || '';
+                document.getElementById('m-status').value = p.status || 'Rascunho';
+                document.getElementById('m-funil').value = p.funil || '';
+                document.getElementById('m-data').value = p.data_publicacao || '';
+                document.getElementById('m-link').value = p.link_postagem || '';
+                document.getElementById('m-visualizacoes').value = p.visualizacoes || '';
+                document.getElementById('m-curtidas').value = p.curtidas || '';
+                document.getElementById('m-compartilhamentos').value = p.compartilhamentos || '';
+                document.getElementById('m-comentarios').value = p.comentarios || '';
+            } else {
+                fields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) { el.value !== undefined ? el.value = '' : el.innerHTML = ''; }
+                });
+                document.getElementById('m-conteudo').innerHTML = '';
+                document.getElementById('m-status').value = 'Rascunho';
+                document.getElementById('m-funil').value = '';
+            }
+            document.getElementById('modal-overlay').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => document.getElementById('m-titulo').focus(), 80);
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').style.display = 'none';
+            document.body.style.overflow = '';
+            editingId = null;
+        }
+
+        function handleOverlayClick(e) {
+            if (e.target === document.getElementById('modal-overlay')) closeModal();
+        }
+
+        // Save post
+        async function savePost() {
+            const titulo = document.getElementById('m-titulo').value.trim();
+            if (!titulo) {
+                showToast('⚠️ O título é obrigatório');
+                document.getElementById('m-titulo').focus();
+                return;
+            }
+
+            const btn = document.getElementById('btn-save');
+            btn.disabled = true;
+            btn.textContent = 'Salvando...';
+
+            const payload = {
+                titulo,
+                conteudo: document.getElementById('m-conteudo').innerHTML.trim() || null,
+                papel: document.getElementById('m-papel').value || null,
+                tema: document.getElementById('m-tema').value.trim() || null,
+                formato: document.getElementById('m-formato').value || null,
+                plataforma: document.getElementById('m-plataforma').value || null,
+                status: document.getElementById('m-status').value || 'Rascunho',
+                funil: document.getElementById('m-funil').value || null,
+                data_publicacao: document.getElementById('m-data').value || null,
+                link_postagem: document.getElementById('m-link').value.trim() || null,
+                visualizacoes: parseInt(document.getElementById('m-visualizacoes').value) || 0,
+                curtidas: parseInt(document.getElementById('m-curtidas').value) || 0,
+                compartilhamentos: parseInt(document.getElementById('m-compartilhamentos').value) || 0,
+                comentarios: parseInt(document.getElementById('m-comentarios').value) || 0,
+                updated_at: new Date().toISOString()
+            };
+
+            let error;
+            if (editingId) {
+                ({ error } = await db.from('posts').update(payload).eq('id', editingId));
+            } else {
+                ({ error } = await db.from('posts').insert(payload));
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Salvar Post';
+
+            if (error) {
+                console.error(error);
+                showToast('❌ Erro ao salvar.');
+                return;
+            }
+
+            showToast(editingId ? '✓ Post atualizado!' : '✓ Post criado!');
+            closeModal();
+            loadPosts();
+        }
+
+        // Status
+        async function setStatus(id, status) {
+            const { error } = await db.from('posts').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
+            if (error) {
+                showToast('❌ Erro');
+                return;
+            }
+            showToast(`✓ ${status}`);
+            loadPosts();
+        }
+
+        // View mode
+        let viewMode = 'temas';
+
+        function setView(mode) {
+            viewMode = mode;
+            const isTemas     = mode === 'temas';
+            const isTemaPosts = mode === 'tema-posts';
+            const isLixeira   = mode === 'lixeira';
+            document.getElementById('tab-temas').classList.toggle('active', isTemas || isTemaPosts);
+            document.getElementById('tab-lixeira').classList.toggle('active', isLixeira);
+            document.getElementById('temas-view').style.display       = isTemas ? '' : 'none';
+            document.getElementById('tema-desc-edit-wrap').style.display = isTemas ? 'none' : '';
+            document.getElementById('tema-desc-edit-wrap').classList.remove('open');
+            document.getElementById('posts-view').style.display       = isTemaPosts ? '' : 'none';
+            document.getElementById('toolbar-wrap').style.display     = isTemaPosts ? '' : 'none';
+            document.getElementById('lixeira-view').style.display     = isLixeira ? '' : 'none';
+            if (isTemas)   renderThemes();
+            if (isLixeira) renderLixeira();
+        }
+
+        // Soft delete — move para lixeira
+        async function deletePost(id) {
+            if (!confirm('Mover para a lixeira?')) return;
+            const { error } = await db.from('posts').update({
+                status: 'Lixeira',
+                updated_at: new Date().toISOString()
+            }).eq('id', id);
+            if (error) { showToast('❌ Erro'); return; }
+            showToast('🗑 Movido para a lixeira');
+            await loadPosts();
+        }
+
+        // Restaurar post da lixeira
+        async function restaurarPost(id) {
+            const { error } = await db.from('posts').update({
+                status: 'Rascunho',
+                updated_at: new Date().toISOString()
+            }).eq('id', id);
+            if (error) { showToast('❌ Erro'); return; }
+            showToast('✓ Post restaurado!');
+            await loadPosts();
+            renderLixeira();
+        }
+
+        // Excluir definitivamente
+        async function deleteForever(id) {
+            if (!confirm('Excluir permanentemente? Esta ação não pode ser desfeita.')) return;
+            const { error } = await db.from('posts').delete().eq('id', id);
+            if (error) { showToast('❌ Erro'); return; }
+            showToast('🗑 Excluído permanentemente');
+            await loadPosts();
+            renderLixeira();
+        }
+
+        // Apagar tudo da lixeira
+        async function deleteAllLixeira() {
+            const lixeira = posts.filter(p => p.status === 'Lixeira');
+            if (!lixeira.length) { showToast('A lixeira já está vazia.'); return; }
+            if (!confirm(`Excluir permanentemente todos os ${lixeira.length} post(s) da lixeira? Esta ação não pode ser desfeita.`)) return;
+            const ids = lixeira.map(p => p.id);
+            const { error } = await db.from('posts').delete().in('id', ids);
+            if (error) { showToast('❌ Erro ao apagar.'); return; }
+            showToast(`🗑 ${ids.length} post(s) apagado(s) permanentemente.`);
+            await loadPosts();
+            renderLixeira();
+        }
+
+        // Auto-limpa posts na lixeira há mais de 15 dias
+        async function cleanupLixeira() {
+            const cutoff = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString();
+            const { data } = await db.from('posts').select('id')
+                .eq('status', 'Lixeira').lt('updated_at', cutoff);
+            if (data && data.length) {
+                const ids = data.map(p => p.id);
+                await db.from('posts').delete().in('id', ids);
+            }
+        }
+
+        // Renderiza a aba lixeira
+        function renderLixeira() {
+            const lixeira = posts.filter(p => p.status === 'Lixeira');
+            const container = document.getElementById('lixeira-container');
+            const badge = document.getElementById('trash-count');
+
+            badge.textContent = lixeira.length || '';
+            badge.style.display = lixeira.length ? 'inline-block' : 'none';
+
+            if (!lixeira.length) {
+                container.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+                    <div class="icon">✅</div><p>Lixeira vazia</p></div>`;
+                return;
+            }
+
+            const now = Date.now();
+            container.innerHTML = lixeira.map(p => {
+                const deletedAt = new Date(p.updated_at).getTime();
+                const daysLeft = Math.ceil((deletedAt + 15*24*60*60*1000 - now) / (24*60*60*1000));
+                const urgente = daysLeft <= 3;
+                return `
+                <div class="trash-card">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem">
+                        <div style="font-weight:600;font-size:0.92rem">${esc(p.titulo)}</div>
+                        <span class="trash-expires ${urgente ? 'warning' : ''}">
+                            ${daysLeft > 0 ? `⏳ ${daysLeft} dia${daysLeft > 1 ? 's' : ''}` : '⚠️ Expira hoje'}
+                        </span>
+                    </div>
+                    ${p.conteudo ? `<div class="card-content" style="font-size:0.8rem;color:var(--gray-500)">${renderContent(p.conteudo)}</div>` : ''}
+                    <div style="display:flex;gap:0.35rem;justify-content:flex-end;margin-top:0.25rem">
+                        <button class="btn-sm blue" onclick="restaurarPost('${p.id}')">↩ Restaurar</button>
+                        <button class="btn-sm danger" onclick="deleteForever('${p.id}')" style="color:var(--danger)">🗑 Excluir</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // Import
+        function openImport() {
+            document.getElementById('import-texto').value = '';
+            document.getElementById('parsed-preview').style.display = 'none';
+            document.getElementById('docx-preview-wrap').style.display = 'none';
+            document.getElementById('import-text-wrap').style.display = 'block';
+            document.getElementById('drop-zone').style.display = 'block';
+            document.getElementById('import-overlay').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImport() {
+            document.getElementById('import-overlay').style.display = 'none';
+            document.body.style.overflow = '';
+            docxPosts = [];
+        }
+
+        // Drag & drop handlers
+        function onDragOver(e) {
+            e.preventDefault();
+            document.getElementById('drop-zone').classList.add('drag-over');
+        }
+        function onDragLeave() {
+            document.getElementById('drop-zone').classList.remove('drag-over');
+        }
+        function onDrop(e) {
+            e.preventDefault();
+            document.getElementById('drop-zone').classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file) processDocxFile(file);
+        }
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) processDocxFile(file);
+        }
+
+        // Processa o arquivo .docx com mammoth
+        let docxPosts = [];
+
+        async function processDocxFile(file) {
+            if (!file.name.endsWith('.docx')) {
+                showToast('⚠️ Use um arquivo .docx (Word)');
+                return;
+            }
+            const zone = document.getElementById('drop-zone');
+            zone.innerHTML = '<div class="drop-icon">⏳</div><p>Lendo arquivo...</p>';
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const result = await mammoth.convertToHtml({ arrayBuffer });
+                docxPosts = parseDocxHtml(result.value);
+
+                if (!docxPosts.length) {
+                    showToast('⚠️ Nenhum conteúdo encontrado no arquivo.');
+                    resetDropZone();
+                    return;
+                }
+
+                showDocxPreview(docxPosts);
+            } catch (err) {
+                console.error(err);
+                showToast('❌ Erro ao ler o arquivo.');
+                resetDropZone();
+            }
+        }
+
+        function resetDropZone() {
+            const zone = document.getElementById('drop-zone');
+            zone.innerHTML = `
+                <div class="drop-icon">📄</div>
+                <p><strong>Arraste um arquivo Word (.docx) aqui</strong></p>
+                <p>ou <button class="btn-select" onclick="event.stopPropagation();document.getElementById('file-input').click()">selecione o arquivo</button></p>
+                <input type="file" id="file-input" accept=".docx" style="display:none" onchange="handleFileSelect(event)">`;
+        }
+
+        // ─── Parser do Word com múltiplas estratégias ───────────────────
+        const FUNIL_MAP = { 'atração':'Atração', 'atracao':'Atração', 'atracão':'Atração',
+                            'qualificação':'Qualificação', 'qualificacao':'Qualificação',
+                            'conversão':'Conversão', 'conversao':'Conversão' };
+        const PAPEL_VALS      = ['Mentor','Pensador','Professor','Amigo','Soldado'];
+        const FORMATO_MAP     = { reels:'Reels', reel:'Reels', stories:'Stories', texto:'Texto',
+                                   shorts:'Shorts', audio:'Audio', video:'Video', tiktok:'Reels' };
+        const PLATAFORMA_MAP  = { instagram:'Instagram', tiktok:'TikTok',
+                                   youtube:'YouTube', spotify:'Spotify' };
+
+        function parseDocxHtml(html) {
+            const div = document.createElement('div');
+            div.innerHTML = html;
+            const nodes = Array.from(div.childNodes).filter(n => n.nodeType === 1);
+
+            // Estratégia 0 — separar por "Roteiro N" / "Roteiro N - Papel" (padrão mais comum)
+            const roteiroRx = /^roteiro\s*\d+/i;
+            const roteiroNodes = nodes.filter(n => {
+                if (!['P','H1','H2','H3','H4'].includes(n.tagName)) return false;
+                return roteiroRx.test(n.textContent.trim());
+            });
+            if (roteiroNodes.length > 1) {
+                const sections = splitNodes(nodes, n => roteiroNodes.includes(n), true);
+                if (sections.length > 1) return sections.map(extractSection);
+            }
+
+            // Estratégia 1 — separar por <hr> (quebras de página explícitas)
+            if (div.querySelector('hr')) {
+                const sections = splitNodes(nodes, n => n.tagName === 'HR', false);
+                if (sections.length > 1) return sections.map(extractSection);
+            }
+
+            // Estratégia 2 — separar por parágrafos completamente em negrito (títulos sem estilo)
+            // Só aplica se os bold-titles parecem ser cabeçalhos (não todo parágrafo curto em negrito)
+            const boldTitles = nodes.filter(n => {
+                if (n.tagName !== 'P') return false;
+                const text = n.textContent.trim();
+                if (!text || text.length > 120) return false;
+                // Parágrafo onde TODO o texto está dentro de <strong> ou <b>
+                const boldText = [...n.querySelectorAll('strong, b')].map(el => el.textContent).join('').trim();
+                return boldText && boldText === text;
+            });
+            // Só usa essa estratégia se encontrar poucos bold-titles (≤10), evita false positives
+            if (boldTitles.length > 1 && boldTitles.length <= 10) {
+                const sections = splitNodes(nodes, n => boldTitles.includes(n), true);
+                if (sections.length > 1) return sections.map(extractSection);
+            }
+
+            // Estratégia 3 — separar por linhas em branco múltiplas (≥2 <p> vazios seguidos)
+            const blankRuns = findBlankRuns(nodes, 2);
+            if (blankRuns.length > 0) {
+                const sections = splitNodes(nodes, n => blankRuns.includes(n), false);
+                const filtered = sections.filter(s => s.some(n => n.textContent.trim()));
+                if (filtered.length > 1) return filtered.map(extractSection);
+            }
+
+            // Estratégia 4 — headings H1/H2/H3 (markdown / Word com estilos nomeados)
+            if (div.querySelector('h1, h2, h3')) {
+                return splitByHeadings(nodes);
+            }
+
+            // Fallback — documento inteiro como um post
+            return html.trim() ? [extractSection(nodes)] : [];
+        }
+
+        // Divide array de nós por um separador; keepSep=true inclui o separador no novo bloco
+        function splitNodes(nodes, isSep, keepSep) {
+            const sections = [];
+            let cur = [];
+            nodes.forEach(n => {
+                if (isSep(n)) {
+                    if (cur.length) sections.push(cur);
+                    cur = keepSep ? [n] : [];
+                } else {
+                    cur.push(n);
+                }
+            });
+            if (cur.length) sections.push(cur);
+            return sections;
+        }
+
+        // Encontra nós <p> vazios que aparecem em sequência (indicador de separação por espaços)
+        function findBlankRuns(nodes, minRun) {
+            const blanks = new Set();
+            let run = [];
+            nodes.forEach(n => {
+                if (n.tagName === 'P' && !n.textContent.trim()) {
+                    run.push(n);
+                } else {
+                    if (run.length >= minRun) run.forEach(b => blanks.add(b));
+                    run = [];
+                }
+            });
+            return [...blanks];
+        }
+
+        // Split por headings (estratégia original)
+        function splitByHeadings(nodes) {
+            const posts = [];
+            let title = null, contentNodes = [];
+            const flush = () => {
+                if (!title) return;
+                posts.push(extractSection(contentNodes, title));
+                title = null; contentNodes = [];
+            };
+            nodes.forEach(n => {
+                if (['H1','H2','H3'].includes(n.tagName)) { flush(); title = n.textContent.trim(); }
+                else if (title) contentNodes.push(n);
+                else if (n.textContent.trim()) { title = n.textContent.trim().substring(0,100); }
+            });
+            flush();
+            return posts;
+        }
+
+        // Extrai um post de um array de nós — detecta título, papel, formato, plataforma
+        function extractSection(nodes, forceTitle = null) {
+            const post = { titulo: forceTitle || '', conteudo: '', papel: '', formato: '', plataforma: '', funil: '' };
+            const contentParts = [];
+            let titleFound = !!forceTitle;
+
+            // Linhas que são só metadados (não vão para o conteúdo)
+            const metaRx = /^(papel|formato|plataforma|fase do funil|duração estimada|funil|tom)\s*[:：]/i;
+
+            nodes.forEach(n => {
+                const text = (n.textContent || '').trim();
+                if (!text) return;
+
+                if (!titleFound) {
+                    // Primeiro nó não-vazio = título; remove prefixo "Roteiro NN — "
+                    post.titulo = text.replace(/^roteiro\s*\d+\s*[—\-]+\s*/i, '').trim() || text;
+                    titleFound = true;
+                    tryExtractPapelFromText(text, post);
+                    return;
+                }
+
+                // Ignora linhas que são apenas um número isolado (ex: "2", "02") —
+                // comum em arquivos Word com o número do roteiro repetido numa linha solta
+                if (/^\d{1,3}$/.test(text)) return;
+
+                const metaMatch = text.match(/^([\w\s]+?)\s*[:：]\s*(.+)/i);
+                if (metaMatch && metaRx.test(text)) {
+                    const key = metaMatch[1].trim().toLowerCase()
+                        .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+                    const val = metaMatch[2].trim();
+                    if (key === 'papel')              trySetPapel(val, post);
+                    else if (key === 'formato')       trySetFormato(val, post);
+                    else if (key === 'plataforma')    trySetPlataforma(val, post);
+                    else if (key === 'fase do funil' || key === 'funil') trySetFunil(val, post);
+                    // metadados não entram no conteúdo
+                } else {
+                    contentParts.push(n.outerHTML || `<p>${esc(text)}</p>`);
+                }
+            });
+
+            // Inferência cruzada: Reel sem plataforma → Instagram
+            if (post.formato === 'Reels' && !post.plataforma) post.plataforma = 'Instagram';
+            if (post.formato === 'Shorts' && !post.plataforma) post.plataforma = 'YouTube';
+
+            post.conteudo = contentParts.join('').trim();
+            return post;
+        }
+
+        function tryExtractPapelFromText(text, post) {
+            for (const p of PAPEL_VALS) {
+                if (text.toLowerCase().includes(p.toLowerCase())) { post.papel = p; return; }
+            }
+        }
+        function trySetPapel(val, post) {
+            for (const p of PAPEL_VALS) {
+                if (val.toLowerCase().includes(p.toLowerCase())) { post.papel = p; return; }
+            }
+            post.papel = val;
+        }
+        function trySetFormato(val, post) {
+            const vl = val.toLowerCase();
+            for (const [k, v] of Object.entries(FORMATO_MAP)) {
+                if (vl.includes(k)) { post.formato = v; return; }
+            }
+        }
+        function trySetPlataforma(val, post) {
+            const vl = val.toLowerCase();
+            for (const [k, v] of Object.entries(PLATAFORMA_MAP)) {
+                if (vl.includes(k)) { post.plataforma = v; return; }
+            }
+        }
+        function trySetFunil(val, post) {
+            const vl = val.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+            for (const [k, v] of Object.entries(FUNIL_MAP)) {
+                if (vl.includes(k)) { post.funil = v; return; }
+            }
+        }
+
+        // Exibe a lista de posts encontrados para o usuário confirmar
+        function showDocxPreview(posts) {
+            document.getElementById('docx-preview-count').textContent =
+                `${posts.length} roteiro${posts.length !== 1 ? 's' : ''} encontrado${posts.length !== 1 ? 's' : ''}`;
+
+            // Pré-preenche o tema global se todos os posts tiverem o mesmo tema detectado
+            const temasDetectados = [...new Set(posts.map(p => p.tema).filter(Boolean))];
+            if (temasDetectados.length === 1) {
+                document.getElementById('docx-global-tema').value = temasDetectados[0];
+            }
+            // Pré-preenche descrição salva se já existir
+            const temaAtual = document.getElementById('docx-global-tema').value.trim();
+            if (temaAtual && temaDescriptions[temaAtual]) {
+                document.getElementById('docx-global-desc').value = temaDescriptions[temaAtual];
+            }
+
+            // Datalist com temas existentes
+            const temasExistentes = [...new Set(posts.filter(p => p.status !== 'Lixeira').map(p => p.tema).filter(Boolean))].sort();
+            const datalistHtml = temasExistentes.map(t => `<option value="${esc(t)}">`).join('');
+
+            document.getElementById('docx-posts-list').innerHTML = posts.map((p, i) => {
+                const snippet = p.conteudo
+                    ? p.conteudo.replace(/<[^>]+>/g, '').substring(0, 80) + '...'
+                    : '(sem conteúdo)';
+                const tags = [p.papel, p.formato, p.plataforma, p.funil].filter(Boolean)
+                    .map(t => `<span style="font-size:0.63rem;background:var(--primary-light);color:var(--primary-dark);border-radius:4px;padding:0.1rem 0.4rem;font-weight:600">${esc(t)}</span>`)
+                    .join('');
+                return `
+                    <div class="docx-post-item">
+                        <input type="checkbox" id="dp-${i}" checked>
+                        <div style="flex:1;min-width:0">
+                            <div class="post-preview-title">${esc(p.titulo)}</div>
+                            ${tags ? `<div style="display:flex;gap:0.25rem;flex-wrap:wrap;margin:0.2rem 0">${tags}</div>` : ''}
+                            <div class="post-preview-snippet">${esc(snippet)}</div>
+                        </div>
+                    </div>`;
+            }).join('') + `<datalist id="docx-temas-list">${datalistHtml}</datalist>`;
+
+            document.getElementById('check-all').checked = true;
+            document.getElementById('docx-preview-wrap').style.display = 'block';
+            document.getElementById('import-text-wrap').style.display = 'none';
+            document.getElementById('drop-zone').style.display = 'none';
+        }
+
+        function toggleAllDocx(checked) {
+            docxPosts.forEach((_, i) => {
+                const cb = document.getElementById(`dp-${i}`);
+                if (cb) cb.checked = checked;
+            });
+        }
+
+        // Salva os posts selecionados no Supabase
+        async function importarDocx() {
+            const tema = document.getElementById('docx-global-tema').value.trim();
+            const desc = document.getElementById('docx-global-desc').value.trim();
+
+            const selecionados = docxPosts
+                .map((p, i) => ({ ...p, _index: i }))
+                .filter(p => {
+                    const cb = document.getElementById(`dp-${p._index}`);
+                    return cb && cb.checked;
+                });
+
+            if (!selecionados.length) { showToast('⚠️ Selecione ao menos um post.'); return; }
+
+            const btn = document.getElementById('btn-import-docx');
+            btn.disabled = true;
+            btn.textContent = 'Importando...';
+
+            const payload = selecionados.map(p => ({
+                titulo:    p.titulo,
+                conteudo:  p.conteudo  || null,
+                tema:      tema        || null,
+                papel:     p.papel     || null,
+                formato:   p.formato   || null,
+                plataforma:p.plataforma|| null,
+                funil:     p.funil     || null,
+                status:    'Rascunho',
+                updated_at: new Date().toISOString()
+            }));
+
+            const { error } = await db.from('posts').insert(payload);
+            btn.disabled = false;
+            btn.textContent = '⬇ Importar selecionados';
+
+            if (error) { console.error(error); showToast('❌ Erro ao importar.'); return; }
+
+            // Salva descrição do tema no localStorage
+            if (tema && desc) {
+                temaDescriptions[tema] = desc;
+                localStorage.setItem('tema_descriptions', JSON.stringify(temaDescriptions));
+            }
+
+            showToast(`✓ ${selecionados.length} roteiro${selecionados.length !== 1 ? 's' : ''} importado${selecionados.length !== 1 ? 's' : ''}!`);
+            closeImport();
+            await loadPosts();
+            // Navega direto para o tema importado
+            if (tema) openTema(tema);
+        }
+
+        function handleImportOverlayClick(e) {
+            if (e.target === document.getElementById('import-overlay')) closeImport();
+        }
+
+        function parseTexto(texto) {
+            const lines = texto.split('\n').map(l => l.trim()).filter(Boolean);
+            if (!lines.length) return null;
+
+            const r = { titulo:'', conteudo:'', papel:'', tema:'', plataforma:'', formato:'' };
+            const remaining = [];
+            const fieldMap = {
+                titulo: /^(título|titulo|title)\s*[:：]/i,
+                papel: /^(papel|role)\s*[:：]/i,
+                tema: /^(tema|assunto)\s*[:：]/i,
+                plataforma: /^(plataforma|rede)\s*[:：]/i,
+                formato: /^(formato|tipo)\s*[:：]/i,
+            };
+
+            for (const line of lines) {
+                let matched = false;
+                for (const [field, regex] of Object.entries(fieldMap)) {
+                    if (regex.test(line)) {
+                        r[field] = line.replace(regex,'').trim().replace(/^\*+|\*+$/g,'');
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) remaining.push(line);
+            }
+
+            if (!r.titulo && remaining.length) r.titulo = remaining.shift().replace(/^#+\s*/, '').replace(/^\*+|\*+$/g,'');
+
+            const ft = texto.toLowerCase();
+            if (!r.plataforma) {
+                for (const p of ['instagram','tiktok','youtube','spotify']) {
+                    if (ft.includes(p)) {
+                        r.plataforma = p.charAt(0).toUpperCase()+p.slice(1);
+                        break;
+                    }
+                }
+            }
+
+            if (!r.formato) {
+                for (const f of ['reels','stories','texto','shorts','audio','video']) {
+                    if (ft.includes(f)) {
+                        r.formato = f.charAt(0).toUpperCase()+f.slice(1);
+                        break;
+                    }
+                }
+            }
+
+            if (!r.conteudo) r.conteudo = remaining.join('\n').trim();
+            return r;
+        }
+
+        function previewParse() {
+            const texto = document.getElementById('import-texto').value.trim();
+            const preview = document.getElementById('parsed-preview');
+            if (!texto) {
+                preview.style.display = 'none';
+                return;
+            }
+            const p = parseTexto(texto);
+            if (!p?.titulo) {
+                preview.style.display = 'none';
+                return;
+            }
+            preview.innerHTML = `<strong style="display:block;margin-bottom:.35rem;font-size:.7rem;text-transform:uppercase;letter-spacing:.04em">Detectado:</strong>
+                ${p.titulo?`📌 <b>Título:</b> ${esc(p.titulo)}<br>`:''}
+                ${p.papel?`🏷 <b>Papel:</b> ${esc(p.papel)}<br>`:''}
+                ${p.tema?`💡 <b>Tema:</b> ${esc(p.tema)}<br>`:''}
+                ${p.formato?`🎬 <b>Formato:</b> ${esc(p.formato)}<br>`:''}
+                ${p.plataforma?`📱 <b>Plataforma:</b> ${esc(p.plataforma)}`:''}`;
+            preview.style.display = 'block';
+        }
+
+        function importarPost() {
+            const texto = document.getElementById('import-texto').value.trim();
+            if (!texto) {
+                showToast('⚠️ Cole algum texto primeiro');
+                return;
+            }
+            const p = parseTexto(texto);
+            closeImport();
+            editingId = null;
+            document.getElementById('modal-title').textContent = 'Novo Post (Importado)';
+            document.getElementById('btn-save').disabled = false;
+            document.getElementById('m-titulo').value = p.titulo || '';
+            document.getElementById('m-conteudo').innerHTML = markdownToHtml(p.conteudo || '');
+            document.getElementById('m-papel').value = p.papel || '';
+            document.getElementById('m-tema').value = p.tema || '';
+            document.getElementById('m-formato').value = p.formato || '';
+            document.getElementById('m-status').value = 'Rascunho';
+            document.getElementById('m-link').value = '';
+            document.getElementById('m-data').value = '';
+            ['m-visualizacoes','m-curtidas','m-compartilhamentos','m-comentarios'].forEach(id => document.getElementById(id).value = '');
+            const pl = document.getElementById('m-plataforma');
+            const match = [...pl.options].find(o => o.value && p.plataforma && p.plataforma.toLowerCase().startsWith(o.value.toLowerCase().split('/')[0]));
+            pl.value = match ? match.value : '';
+            document.getElementById('modal-overlay').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Modal editar conteúdo (simplificado)
+        let contentEditingId = null;
+
+        function openContentModal(id) {
+            const p = posts.find(x => x.id === id);
+            if (!p) return;
+            contentEditingId = id;
+            document.getElementById('ce-titulo').value = p.titulo || '';
+            const conteudo = p.conteudo || '';
+            document.getElementById('ce-conteudo').innerHTML = /<[a-z]/i.test(conteudo)
+                ? conteudo
+                : conteudo.replace(/\n/g, '<br>');
+            document.getElementById('btn-save-content').disabled = false;
+            document.getElementById('content-overlay').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => document.getElementById('ce-conteudo').focus(), 80);
+        }
+
+        function closeContentModal() {
+            document.getElementById('content-overlay').style.display = 'none';
+            document.body.style.overflow = '';
+            contentEditingId = null;
+        }
+
+        function handleContentOverlayClick(e) {
+            if (e.target === document.getElementById('content-overlay')) closeContentModal();
+        }
+
+        async function saveContent() {
+            const titulo = document.getElementById('ce-titulo').value.trim();
+            if (!titulo) {
+                showToast('⚠️ O título é obrigatório');
+                document.getElementById('ce-titulo').focus();
+                return;
+            }
+            const btn = document.getElementById('btn-save-content');
+            btn.disabled = true;
+            btn.textContent = 'Salvando...';
+
+            const { error } = await db.from('posts').update({
+                titulo,
+                conteudo: document.getElementById('ce-conteudo').innerHTML.trim() || null,
+                updated_at: new Date().toISOString()
+            }).eq('id', contentEditingId);
+
+            btn.disabled = false;
+            btn.textContent = 'Salvar';
+
+            if (error) { showToast('❌ Erro ao salvar.'); return; }
+            showToast('✓ Conteúdo atualizado!');
+            closeContentModal();
+            loadPosts();
+        }
+
+        // Extrai texto puro do HTML
+        function htmlToPlainText(html) {
+            if (!html) return '';
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<\/div>/gi, '\n');
+            return tmp.textContent || tmp.innerText || '';
+        }
+
+        // Limpa o texto removendo metadados e orientações de roteiro
+        function cleanForTeleprompter(conteudo) {
+            const texto = htmlToPlainText(conteudo);
+            if (!texto) return '';
+
+            // Padrões de linhas inteiras que são metadados/orientações (remover linha toda)
+            const metaLinePatterns = [
+                /^duração estimada/i,
+                /^fase do funil/i,
+                /^funil:/i,
+                /^tom\s*[:：\-]/i,
+                /^olho na câmera/i,
+                /^sem intro/i,
+                /^formato\s*[:：]/i,
+                /^plataforma\s*[:：]/i,
+                /^papel\s*[:：]/i,
+                /^tema\s*[:：]/i,
+                /^título\s*[:：]/i,
+                /^titulo\s*[:：]/i,
+                /^status\s*[:：]/i,
+                /^hook\s*[:：]/i,
+                /^cta\s*[:：]/i,
+                /^legenda\s*[:：]/i,
+                /^hashtags?\s*[:：]/i,
+                /^instrução\s*[:：]/i,
+                /^observação\s*[:：]/i,
+                /^obs\s*[:：]/i,
+                /^nota\s*[:：]/i,
+            ];
+
+            let lines = texto.split('\n').map(l => l.trim());
+
+            lines = lines
+                // Remove linhas que são só metadados
+                .filter(line => !metaLinePatterns.some(p => p.test(line)))
+                // Remove linhas que são só marcadores de cena: [ABERTURA] — 0 A 5S
+                .filter(line => !/^\[[\w\sÀ-ú]+\](\s*[—\-]\s*[\d\w\s]+)?$/.test(line))
+                // Remove linhas que são só timings/marcadores ex: "— 0 A 5S", "0:00 – 0:05"
+                .filter(line => !/^[—\-]\s*\d+\s*(a|A)\s*\d+[sS]?$/.test(line))
+                .filter(line => !/^\d+:\d+\s*[—\-]\s*\d+:\d+$/.test(line))
+                .map(line =>
+                    line
+                        // Remove marcadores de cena inline: [ABERTURA], [CTA], [GANCHO], etc.
+                        .replace(/\[[\w\sÀ-ú]+\]/g, '')
+                        // Remove timings inline: — 0 A 5S, – 5 a 40s
+                        .replace(/[—\-]\s*\d+\s*(a|A)\s*\d+[sS]?\b/g, '')
+                        // Remove "tom direto," / "olho na câmera," tipo de direções no meio da linha
+                        .replace(/\btom\s+\w+[\w\s,]*/gi, '')
+                        .trim()
+                )
+                // Remove linhas que ficaram vazias após limpeza
+                .filter(Boolean)
+                // Colapsa múltiplas linhas em branco para no máximo uma
+                .reduce((acc, line) => {
+                    if (line === '' && acc[acc.length - 1] === '') return acc;
+                    acc.push(line);
+                    return acc;
+                }, []);
+
+            return lines.join('\n').trim()
+                // Remove aspas (não são necessárias na leitura em voz alta)
+                .replace(/["""«»„]/g, '');
+        }
+
+        // Modal teleprompter
+        let currentTpId = null;
+
+        function openTeleprompter(id) {
+            const p = posts.find(x => x.id === id);
+            if (!p || !p.conteudo) return;
+            currentTpId = id;
+            document.getElementById('tp-titulo-header').textContent = '📋 ' + (p.titulo || 'Texto para leitura');
+            const texto = cleanForTeleprompter(p.conteudo);
+            const el = document.getElementById('tp-text');
+            el.innerHTML = texto.replace(/\n/g, '<br>');
+            document.getElementById('tp-char-count').textContent = `${texto.length} caracteres · ${texto.split(/\s+/).filter(Boolean).length} palavras`;
+            document.getElementById('btn-copy-tp').textContent = '📋 Copiar texto';
+            document.getElementById('btn-copy-tp').classList.remove('copied');
+            document.getElementById('btn-save-tp').textContent = '💾 Salvar';
+            document.getElementById('teleprompter-overlay').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeTeleprompter() {
+            document.getElementById('teleprompter-overlay').style.display = 'none';
+            document.body.style.overflow = '';
+            currentTpId = null;
+        }
+
+        async function saveTeleprompter() {
+            if (!currentTpId) return;
+            const novoConteudo = document.getElementById('tp-text').innerHTML;
+            const btn = document.getElementById('btn-save-tp');
+            btn.disabled = true;
+            btn.textContent = 'Salvando...';
+            const { error } = await db.from('posts').update({
+                conteudo: novoConteudo,
+                updated_at: new Date().toISOString()
+            }).eq('id', currentTpId);
+            btn.disabled = false;
+            if (error) { btn.textContent = '❌ Erro'; return; }
+            btn.textContent = '✓ Salvo!';
+            setTimeout(() => { btn.textContent = '💾 Salvar'; }, 2000);
+            // Atualiza localmente sem recarregar tudo
+            const idx = posts.findIndex(p => p.id === currentTpId);
+            if (idx !== -1) posts[idx].conteudo = novoConteudo;
+        }
+
+        function handleTeleprompterOverlayClick(e) {
+            if (e.target === document.getElementById('teleprompter-overlay')) closeTeleprompter();
+        }
+
+        function copyTeleprompter() {
+            const texto = htmlToPlainText(document.getElementById('tp-text').innerHTML);
+            navigator.clipboard.writeText(texto).then(() => {
+                const btn = document.getElementById('btn-copy-tp');
+                btn.textContent = '✓ Copiado!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = '📋 Copiar texto';
+                    btn.classList.remove('copied');
+                }, 2500);
+                showToast('✓ Texto copiado!');
+            });
+        }
+
+        // Toast
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        // ─── Auth ─────────────────────────────────────────────────
+        let loginMode = 'signin'; // 'signin' | 'signup'
+
+        function toggleLoginMode() {
+            loginMode = loginMode === 'signin' ? 'signup' : 'signin';
+            document.getElementById('login-btn').textContent = loginMode === 'signup' ? 'Criar conta' : 'Entrar';
+            document.getElementById('login-mode-toggle').innerHTML = loginMode === 'signup'
+                ? 'Já tem conta? <a onclick="toggleLoginMode()">Entrar</a>'
+                : 'Não tem conta? <a onclick="toggleLoginMode()">Criar conta</a>';
+            document.getElementById('login-error').style.display = 'none';
+        }
+
+        async function doLogin() {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const errEl = document.getElementById('login-error');
+            const btn = document.getElementById('login-btn');
+            if (!email || !password) { showLoginError('Preencha e-mail e senha.'); return; }
+            btn.disabled = true;
+            btn.textContent = '...';
+            errEl.style.display = 'none';
+            const fn = loginMode === 'signup'
+                ? db.auth.signUp({ email, password })
+                : db.auth.signInWithPassword({ email, password });
+            const { error } = await fn;
+            btn.disabled = false;
+            btn.textContent = loginMode === 'signup' ? 'Criar conta' : 'Entrar';
+            if (error) { showLoginError(error.message); return; }
+            if (loginMode === 'signup') {
+                showLoginError('Conta criada! Verifique seu e-mail para confirmar, depois entre.');
+                document.getElementById('login-error').style.cssText = 'display:block;background:#d1fae5;color:#065f46';
+                return;
+            }
+            showApp();
+        }
+
+        async function doLogout() {
+            await db.auth.signOut();
+            document.getElementById('login-overlay').style.display = 'flex';
+            document.getElementById('login-password').value = '';
+        }
+
+        function showLoginError(msg) {
+            const el = document.getElementById('login-error');
+            el.textContent = msg;
+            el.style.display = 'block';
+        }
+
+        function showApp() {
+            document.getElementById('login-overlay').style.display = 'none';
+            loadPosts();
+        }
+
+        // Verifica sessão existente ao carregar
+        (async () => {
+            const { data: { session } } = await db.auth.getSession();
+            if (session) { showApp(); }
+            // Se não há sessão, o login-overlay já está visível por padrão
+        })();
+    </script>
+</body>
+</html>
