@@ -1834,6 +1834,8 @@
         let compactMode = false;
         let selectedTema = null;
         let temaDescriptions = JSON.parse(localStorage.getItem('tema_descriptions') || '{}');
+        let temaMetaId = null; // ID da linha oculta que guarda as descrições no Supabase
+        const TEMA_META_TITULO = '__tema_descriptions__';
 
         const TEMA_GRADIENTS = [
             'linear-gradient(135deg,#667eea,#764ba2)',
@@ -1893,13 +1895,25 @@
             const desc = document.getElementById('tema-desc-textarea').value.trim();
             if (selectedTema) {
                 temaDescriptions[selectedTema] = desc;
-                localStorage.setItem('tema_descriptions', JSON.stringify(temaDescriptions));
+                saveTemaDescsToSupabase();
                 const descEl = document.getElementById('tema-detail-desc');
-                descEl.textContent = desc;
-                descEl.style.display = desc ? 'block' : 'none';
+                if (descEl) { descEl.textContent = desc; descEl.style.display = desc ? 'block' : 'none'; }
             }
             closeTemaDescEdit();
             showToast('✓ Descrição salva!');
+        }
+
+        async function saveTemaDescsToSupabase() {
+            const json = JSON.stringify(temaDescriptions);
+            localStorage.setItem('tema_descriptions', json);
+            if (temaMetaId) {
+                await db.from('posts').update({ conteudo: json, updated_at: new Date().toISOString() }).eq('id', temaMetaId);
+            } else {
+                const { data } = await db.from('posts').insert({
+                    titulo: TEMA_META_TITULO, conteudo: json, status: '__meta__'
+                }).select('id').single();
+                if (data) temaMetaId = data.id;
+            }
         }
 
         // ─── Render galeria de temas ──────────────────────────
@@ -2027,7 +2041,18 @@
                 document.getElementById('posts-container').innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>Erro ao conectar. Verifique o console.</p></div>';
                 return;
             }
-            posts = data || [];
+            // Extrai linha especial de descrições de temas (oculta dos posts)
+            const allData = data || [];
+            const metaRow = allData.find(p => p.titulo === TEMA_META_TITULO);
+            if (metaRow) {
+                temaMetaId = metaRow.id;
+                try {
+                    const saved = JSON.parse(metaRow.conteudo || '{}');
+                    temaDescriptions = saved;
+                    localStorage.setItem('tema_descriptions', JSON.stringify(saved));
+                } catch(e) {}
+            }
+            posts = allData.filter(p => p.titulo !== TEMA_META_TITULO);
             // Atualiza badge da lixeira
             const lixeiraCount = posts.filter(p => p.status === 'Lixeira').length;
             const badge = document.getElementById('trash-count');
@@ -2894,10 +2919,10 @@
 
             if (error) { console.error(error); showToast('❌ Erro ao importar.'); return; }
 
-            // Salva descrição do tema no localStorage
+            // Salva descrição do tema no Supabase
             if (tema && desc) {
                 temaDescriptions[tema] = desc;
-                localStorage.setItem('tema_descriptions', JSON.stringify(temaDescriptions));
+                saveTemaDescsToSupabase();
             }
 
             showToast(`✓ ${selecionados.length} roteiro${selecionados.length !== 1 ? 's' : ''} importado${selecionados.length !== 1 ? 's' : ''}!`);
