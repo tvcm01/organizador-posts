@@ -613,6 +613,47 @@
             -webkit-line-clamp: unset;
             overflow: visible;
         }
+        /* Inline expanded editing */
+        .post-card.inline-expanded {
+            grid-column: 1 / -1;
+            border-left-width: 4px;
+            border-left-color: var(--primary);
+        }
+        .inline-edit-title {
+            width: 100%;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.4rem 0.6rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            outline: none;
+            color: var(--gray-800);
+            margin-bottom: 0.4rem;
+        }
+        .inline-edit-title:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99,102,241,0.15); }
+        .inline-rte-toolbar { margin-bottom: 0.4rem; flex-wrap: wrap; }
+        .inline-editor {
+            width: 100%;
+            min-height: 180px;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: var(--gray-800);
+            outline: none;
+            background: var(--gray-50);
+        }
+        .inline-editor:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99,102,241,0.15); background: white; }
+        .inline-edit-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 0.25rem;
+        }
         .post-card.pronto {
             border-left-color: var(--blue);
             background: #f0fdf4;
@@ -2238,6 +2279,105 @@
             'Usado': { cls: 'usado', icon: '★' },
         };
 
+        // ── Inline editing ────────────────────────────────────────────────────────
+        const expandedCards = new Set();
+
+        function openInlineEdit(id) {
+            expandedCards.add(id);
+            const p = posts.find(x => x.id === id);
+            const el = document.getElementById('card-' + id);
+            if (el && p) el.outerHTML = cardHTML(p);
+            // Focus the editor
+            setTimeout(() => {
+                const editor = document.getElementById('ied-' + id);
+                if (editor) { editor.focus(); placeCaretAtEnd(editor); }
+            }, 50);
+        }
+
+        function closeInlineEdit(id) {
+            expandedCards.delete(id);
+            const p = posts.find(x => x.id === id);
+            const el = document.getElementById('card-' + id);
+            if (el && p) el.outerHTML = cardHTML(p);
+        }
+
+        async function saveInlineEdit(id) {
+            const titleEl   = document.getElementById('iet-' + id);
+            const contentEl = document.getElementById('ied-' + id);
+            if (!titleEl || !contentEl) return;
+            const titulo   = titleEl.value.trim();
+            const conteudo = contentEl.innerHTML;
+            if (!titulo) { showToast('⚠️ Título obrigatório'); titleEl.focus(); return; }
+
+            const btn = document.getElementById('iesave-' + id);
+            if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+
+            const { error } = await db.from('posts').update({
+                titulo, conteudo, updated_at: new Date().toISOString()
+            }).eq('id', id);
+
+            if (error) {
+                if (btn) { btn.disabled = false; btn.textContent = '❌ Erro'; }
+                showToast('❌ Erro ao salvar'); return;
+            }
+
+            // Update local state without re-render
+            const idx = posts.findIndex(p => p.id === id);
+            if (idx !== -1) { posts[idx].titulo = titulo; posts[idx].conteudo = conteudo; }
+
+            if (btn) { btn.disabled = false; btn.textContent = '✓ Salvo!'; setTimeout(() => { if (btn) btn.textContent = '💾 Salvar'; }, 2000); }
+            updateStats();
+            showToast('✓ Salvo!');
+        }
+
+        function placeCaretAtEnd(el) {
+            el.focus();
+            const range = document.createRange();
+            range.selectNodeContents(el);
+            range.collapse(false);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+
+        function inlineRte(cmd, val) {
+            document.execCommand(cmd, false, val || null);
+        }
+
+        function inlineRteSize(selectEl, id) {
+            document.getElementById('ied-' + id)?.focus();
+            document.execCommand('fontSize', false, selectEl.value);
+            selectEl.value = '';
+        }
+
+        function inlineRteColor(input, id) {
+            document.getElementById('ied-' + id)?.focus();
+            document.execCommand('foreColor', false, input.value);
+        }
+
+        function inlineToolbar(id) {
+            return `<div class="rte-toolbar inline-rte-toolbar">
+                <button onmousedown="event.preventDefault();inlineRte('bold')" title="Negrito"><b>B</b></button>
+                <button onmousedown="event.preventDefault();inlineRte('italic')" title="Itálico"><i>I</i></button>
+                <button onmousedown="event.preventDefault();inlineRte('underline')" title="Sublinhado"><u>U</u></button>
+                <div class="rte-sep"></div>
+                <select onmousedown="event.stopPropagation()" onchange="inlineRteSize(this,'${id}');this.value=''" title="Tamanho">
+                    <option value="">Tam.</option>
+                    <option value="1">Pequeno</option>
+                    <option value="3">Normal</option>
+                    <option value="5">Grande</option>
+                    <option value="7">Enorme</option>
+                </select>
+                <input type="color" value="#000000" onmousedown="event.stopPropagation()" oninput="inlineRteColor(this,'${id}')" title="Cor">
+                <div class="rte-sep"></div>
+                <button onmousedown="event.preventDefault();inlineRte('justifyLeft')" title="Esquerda">&#8676;</button>
+                <button onmousedown="event.preventDefault();inlineRte('justifyCenter')" title="Centro">&#8801;</button>
+                <button onmousedown="event.preventDefault();inlineRte('justifyRight')" title="Direita">&#8677;</button>
+                <div class="rte-sep"></div>
+                <button onmousedown="event.preventDefault();inlineRte('removeFormat')" title="Limpar">&#10006;</button>
+            </div>`;
+        }
+
         function cardHTML(p) {
             const hasMetrics = p.visualizacoes || p.curtidas || p.compartilhamentos || p.comentarios;
             const data = p.data_publicacao ? new Date(p.data_publicacao+'T12:00:00').toLocaleDateString('pt-BR') : '';
@@ -2264,8 +2404,37 @@
                 }
             }
 
+            // ── Expanded inline edit mode ──────────────────────────────────────────
+            if (expandedCards.has(p.id)) {
+                return `
+                <div class="post-card inline-expanded ${st.cls}" id="card-${p.id}">
+                    <div class="card-header">
+                        <div style="display:flex;flex-direction:column;gap:0.25rem;flex:1;min-width:0">
+                            ${p.tema ? `<span class="card-tema-badge">${esc(p.tema)}</span>` : ''}
+                        </div>
+                        <span class="status-badge ${st.cls}">${st.icon} ${p.status||'Rascunho'}</span>
+                    </div>
+                    <input class="inline-edit-title" id="iet-${p.id}" type="text" value="${esc(displayTitle)}" placeholder="Título..." />
+                    ${inlineToolbar(p.id)}
+                    <div class="inline-editor" id="ied-${p.id}" contenteditable="true">${displayConteudo}</div>
+                    <div class="inline-edit-actions">
+                        <button class="btn-sm blue" id="iesave-${p.id}" onclick="saveInlineEdit('${p.id}')">💾 Salvar</button>
+                        <button class="btn-sm neutral" onclick="closeInlineEdit('${p.id}')">✕ Fechar</button>
+                        <div style="flex:1"></div>
+                        ${p.status !== 'Rascunho' ? `<button class="btn-sm neutral" onclick="setStatus('${p.id}','Rascunho')">✏️</button>` : ''}
+                        ${p.status !== 'Pronto' ? `<button class="btn-sm blue" onclick="setStatus('${p.id}','Pronto')">✓ Pronto</button>` : ''}
+                        ${p.status !== 'Usado' ? `<button class="btn-sm success" onclick="setStatus('${p.id}','Usado')">★ Usado</button>` : ''}
+                        <button class="btn-sm" onclick="openModal('${p.id}')" title="Configurações do post">⚙️ Config</button>
+                        ${p.conteudo ? `<button class="btn-sm teleprompter" onclick="openTeleprompter('${p.id}')" title="Abrir teleprompter">🎬 Teleprompter</button>` : ''}
+                        <button class="btn-sm danger" onclick="deletePost('${p.id}')">🗑</button>
+                    </div>
+                </div>
+                `;
+            }
+
+            // ── Normal card ────────────────────────────────────────────────────────
             return `
-                <div class="post-card ${st.cls}">
+                <div class="post-card ${st.cls}" id="card-${p.id}">
                     <div class="card-header">
                         <div style="display:flex;flex-direction:column;gap:0.25rem;flex:1;min-width:0">
                             ${p.tema ? `<span class="card-tema-badge">${esc(p.tema)}</span>` : ''}
@@ -2273,7 +2442,7 @@
                         </div>
                         <span class="status-badge ${st.cls}">${st.icon} ${p.status||'Rascunho'}</span>
                     </div>
-                    ${displayConteudo ? `<div class="card-content" onclick="this.classList.toggle('expanded')" title="Clique para expandir/recolher">${renderContent(displayConteudo)}</div>` : ''}
+                    ${displayConteudo ? `<div class="card-content" onclick="openInlineEdit('${p.id}')" title="Clique para editar">${renderContent(displayConteudo)}</div>` : ''}
                     ${(p.papel||p.plataforma||p.formato||p.funil) ? `
                         <div class="card-tags">
                             ${p.papel ? `<span class="tag tag-papel">${esc(p.papel)}</span>` : ''}
