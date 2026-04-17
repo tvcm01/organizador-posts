@@ -2301,7 +2301,7 @@
                         <div class="card-actions-divider"></div>
                         <button class="btn-sm" onclick="openContentModal('${p.id}')" title="Editar texto">✏️ Editar</button>
                         <button class="btn-sm" onclick="openModal('${p.id}')" title="Configurações do post">⚙️ Config</button>
-                        ${p.conteudo ? `<button class="btn-sm teleprompter" onclick="openTeleprompter('${p.id}')" title="Copiar texto para teleprompter">📋 Texto</button>` : ''}
+                        ${p.conteudo ? `<button class="btn-sm teleprompter" onclick="openTeleprompter('${p.id}')" title="Abrir teleprompter">🎬 Teleprompter</button>` : ''}
                         <button class="btn-sm danger" onclick="deletePost('${p.id}')">🗑</button>
                     </div>
                 </div>
@@ -3168,11 +3168,19 @@
             const p = posts.find(x => x.id === id);
             if (!p || !p.conteudo) return;
             currentTpId = id;
-            document.getElementById('tp-titulo-header').textContent = '📋 ' + (p.titulo || 'Texto para leitura');
-            const texto = cleanForTeleprompter(p.conteudo);
+            document.getElementById('tp-titulo-header').textContent = '🎬 ' + (p.titulo || 'Teleprompter');
+
+            // Usa conteudo_teleprompter se já existir; senão pré-preenche com texto limpo do conteúdo principal
             const el = document.getElementById('tp-text');
-            el.innerHTML = texto.replace(/\n/g, '<br>');
-            document.getElementById('tp-char-count').textContent = `${texto.length} caracteres · ${texto.split(/\s+/).filter(Boolean).length} palavras`;
+            if (p.conteudo_teleprompter) {
+                el.innerHTML = p.conteudo_teleprompter;
+            } else {
+                const texto = cleanForTeleprompter(p.conteudo);
+                el.innerHTML = texto.replace(/\n/g, '<br>');
+            }
+
+            const plain = htmlToPlainText(el.innerHTML);
+            document.getElementById('tp-char-count').textContent = `${plain.length} caracteres · ${plain.split(/\s+/).filter(Boolean).length} palavras`;
             document.getElementById('btn-copy-tp').textContent = '📋 Copiar texto';
             document.getElementById('btn-copy-tp').classList.remove('copied');
             document.getElementById('btn-save-tp').textContent = '💾 Salvar';
@@ -3188,12 +3196,12 @@
 
         async function saveTeleprompter() {
             if (!currentTpId) return;
-            const novoConteudo = document.getElementById('tp-text').innerHTML;
+            const tpConteudo = document.getElementById('tp-text').innerHTML;
             const btn = document.getElementById('btn-save-tp');
             btn.disabled = true;
             btn.textContent = 'Salvando...';
             const { error } = await db.from('posts').update({
-                conteudo: novoConteudo,
+                conteudo_teleprompter: tpConteudo,
                 updated_at: new Date().toISOString()
             }).eq('id', currentTpId);
             btn.disabled = false;
@@ -3202,7 +3210,7 @@
             setTimeout(() => { btn.textContent = '💾 Salvar'; }, 2000);
             // Atualiza localmente sem recarregar tudo
             const idx = posts.findIndex(p => p.id === currentTpId);
-            if (idx !== -1) posts[idx].conteudo = novoConteudo;
+            if (idx !== -1) posts[idx].conteudo_teleprompter = tpConteudo;
         }
 
         function handleTeleprompterOverlayClick(e) {
