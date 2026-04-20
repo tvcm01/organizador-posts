@@ -3512,6 +3512,17 @@
                 if (sections.length > 1) return sections.map(extractSection);
             }
 
+            // Estratégia 0c — separar por "Copy N" / "Copy N - Título" (padrão de copys)
+            const copyRx = /^copy\s*\d+/i;
+            const copyNodes = nodes.filter(n => {
+                if (!['P','H1','H2','H3','H4'].includes(n.tagName)) return false;
+                return copyRx.test(n.textContent.trim());
+            });
+            if (copyNodes.length > 1) {
+                const sections = splitNodes(nodes, n => copyNodes.includes(n), true);
+                if (sections.length > 1) return sections.map(extractSection);
+            }
+
             // Estratégia 0b — separar por "NN — Papel" em negrito (ex: "01 — Mentor", "02 — Pensador")
             const papelNumRx = /^\d{1,2}\s*[—\-]+\s*\w/;
             const papelNumNodes = nodes.filter(n => {
@@ -3632,7 +3643,12 @@
 
                 if (!titleFound) {
                     // Primeiro nó não-vazio = título; remove prefixo "Roteiro NN — "
-                    post.titulo = text.replace(/^roteiro\s*\d+\s*[—\-]+\s*/i, '').replace(/^\d{1,2}\s*[—\-]+\s*/, '').trim() || text;
+                    post.titulo = text
+                        .replace(/^roteiro\s*\d+\s*[—\-]+\s*/i, '')
+                        .replace(/^copy\s*\d+\s*[-—\s""\u201c\u201d]*/i, '')
+                        .replace(/^\d{1,2}\s*[—\-]+\s*/, '')
+                        .replace(/^[""\u201c\u201d]+|[""\u201c\u201d]+$/g, '')
+                        .trim() || text;
                     titleFound = true;
                     tryExtractPapelFromText(text, post);
                     return;
