@@ -3734,6 +3734,18 @@
             if (post.formato === 'Reels' && !post.plataforma) post.plataforma = 'Instagram';
             if (post.formato === 'Shorts' && !post.plataforma) post.plataforma = 'YouTube';
 
+            // Se o título ficou como número isolado (ex: "1", "02"), extrai o título real
+            // do primeiro parágrafo do conteúdo (igual ao que cardHTML faz na exibição)
+            if (/^\d{1,3}$/.test(post.titulo.trim()) && contentParts.length) {
+                const tmpDiv = document.createElement('div');
+                tmpDiv.innerHTML = contentParts[0];
+                const firstEl = tmpDiv.firstElementChild;
+                if (firstEl && firstEl.textContent.trim()) {
+                    post.titulo = firstEl.textContent.trim();
+                    contentParts.shift(); // remove o primeiro parágrafo (virou título)
+                }
+            }
+
             post.conteudo = contentParts.join('').trim();
             return post;
         }
