@@ -1455,6 +1455,7 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
         .copy-inline-header {
             background: var(--primary-light);
@@ -1483,24 +1484,39 @@
             background: white;
         }
         .copy-content-resize {
-            height: 10px;
-            cursor: s-resize;
-            background: var(--gray-100);
-            border-top: 1px solid var(--gray-200);
-            border-bottom: 1px solid var(--gray-200);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 22px;
+            height: 22px;
+            cursor: se-resize;
+            z-index: 10;
             touch-action: none;
             user-select: none;
+            border-radius: 0 0 7px 0;
+            opacity: 0.5;
         }
         .copy-content-resize::before {
             content: '';
-            display: block;
-            width: 32px;
-            height: 3px;
-            border-radius: 2px;
-            background: var(--gray-400);
+            position: absolute;
+            right: 4px;
+            bottom: 9px;
+            width: 12px;
+            height: 2px;
+            background: var(--gray-600);
+            border-radius: 1px;
+            transform: rotate(-45deg);
+        }
+        .copy-content-resize::after {
+            content: '';
+            position: absolute;
+            right: 4px;
+            bottom: 4px;
+            width: 8px;
+            height: 2px;
+            background: var(--gray-600);
+            border-radius: 1px;
+            transform: rotate(-45deg);
         }
         .copy-inline-actions {
             display: flex;
@@ -4276,19 +4292,28 @@
             loadPosts();
         }
 
-        // ── Resize do editor inline de copys (altura) ────────────────────────
+        // ── Resize do editor inline de copys (altura + largura) ─────────────
         function startCopyContentResize(e, id) {
             e.preventDefault();
-            const el = document.getElementById('cic-' + id);
+            const el   = document.getElementById('cic-' + id);
             if (!el) return;
-            const startY  = e.touches ? e.touches[0].clientY : e.clientY;
-            const startH  = el.offsetHeight;
+            const card = el.closest('.copy-group-card');
+            const startY = e.touches ? e.touches[0].clientY : e.clientY;
+            const startX = e.touches ? e.touches[0].clientX : e.clientX;
+            const startH = el.offsetHeight;
+            const startW = card ? card.offsetWidth : null;
 
             function onMove(ev) {
                 const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
+                const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
                 const newH = Math.max(80, startH + cy - startY);
                 el.style.height    = newH + 'px';
                 el.style.maxHeight = 'none';
+                if (card && startW !== null) {
+                    const newW = Math.max(260, startW + cx - startX);
+                    card.style.width    = newW + 'px';
+                    card.style.minWidth = newW + 'px';
+                }
             }
             function onUp() {
                 document.removeEventListener('mousemove', onMove);
