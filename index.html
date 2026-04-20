@@ -1492,7 +1492,7 @@
             <p id="header-date"></p>
         </div>
         <div class="header-actions">
-            <button class="btn-header ghost" onclick="openImport()">⬇ Importar</button>
+            <button class="btn-header ghost" onclick="openImportContextual()">⬇ Importar</button>
             <button class="btn-header primary" onclick="openModal()">+ Novo Post</button>
             <button class="btn-header ghost" onclick="doLogout()" title="Sair">↩ Sair</button>
         </div>
@@ -2297,6 +2297,7 @@
                         <div style="display:flex;gap:0.35rem;align-items:center">
                             <span class="copy-group-count">${lista.length}</span>
                             <button class="btn-sm" style="font-size:0.7rem;padding:0.2rem 0.45rem" onclick="editCopyGroup('${esc(nome)}')" title="Editar grupo">✏️</button>
+                            <button class="btn-sm danger" style="font-size:0.7rem;padding:0.2rem 0.45rem" onclick="deleteCopyGroup('${esc(nome)}')" title="Excluir grupo">🗑</button>
                         </div>
                     </div>
                     <div class="copy-group-body" id="cg-body-${esc(nome).replace(/[^a-z0-9]/gi,'_')}">${miniCards}</div>
@@ -2430,6 +2431,25 @@
             document.getElementById('cg-tema').value = preNome || '';
             document.getElementById('cg-data').value = new Date().toISOString().split('T')[0];
             document.getElementById('copy-group-modal').style.display = 'flex';
+        }
+
+        async function deleteCopyGroup(nome) {
+            const lista = copys.filter(c => c.tema === nome);
+            const msg = lista.length
+                ? `Excluir o grupo "${nome}" e mover ${lista.length} cop${lista.length>1?'ys':'y'} para a lixeira?`
+                : `Excluir o grupo "${nome}"?`;
+            if (!confirm(msg)) return;
+            // Move todas as copys do grupo para a lixeira
+            if (lista.length) {
+                const ids = lista.map(c => c.id);
+                await db.from('posts').update({ status: 'Lixeira', updated_at: new Date().toISOString() }).in('id', ids);
+            }
+            // Remove metadado do grupo
+            delete copyGroups[nome];
+            await saveCopyGroupsMeta();
+            expandedCopyId = null;
+            await loadPosts();
+            showToast(`🗑 Grupo "${nome}" excluído`);
         }
 
         function editCopyGroup(nome) {
@@ -3413,6 +3433,11 @@
         }
 
         // Import
+        function openImportContextual() {
+            if (viewMode === 'copys') openImportCopys();
+            else openImport();
+        }
+
         function openImport() {
             document.getElementById('import-texto').value = '';
             document.getElementById('parsed-preview').style.display = 'none';
