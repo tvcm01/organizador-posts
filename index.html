@@ -1067,6 +1067,7 @@
             max-height: 93vh;
             overflow-y: auto;
             padding: 1.5rem;
+            position: relative;
         }
         @media (min-width: 640px) {
             .modal {
@@ -1074,6 +1075,36 @@
                 max-width: 600px;
                 max-height: 88vh;
             }
+        }
+        /* Resize handle */
+        .modal-resize-handle {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 22px;
+            height: 22px;
+            cursor: se-resize;
+            z-index: 20;
+            touch-action: none;
+            border-radius: 0 0 16px 0;
+            opacity: 0.35;
+            transition: opacity 0.15s;
+        }
+        .modal-resize-handle:hover { opacity: 0.75; }
+        .modal-resize-handle::before,
+        .modal-resize-handle::after {
+            content: '';
+            position: absolute;
+            background: var(--gray-500);
+            border-radius: 2px;
+        }
+        .modal-resize-handle::before {
+            right: 4px; bottom: 9px; width: 12px; height: 2px;
+            transform: rotate(-45deg);
+        }
+        .modal-resize-handle::after {
+            right: 4px; bottom: 4px; width: 8px; height: 2px;
+            transform: rotate(-45deg);
         }
         .modal-header {
             display: flex;
@@ -4196,6 +4227,59 @@
             document.getElementById('login-overlay').style.display = 'none';
             loadPosts();
         }
+
+        // ── Resize de modais ─────────────────────────────────────────────────
+        function initModalResize() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                if (modal.dataset.resizeInit) return;
+                modal.dataset.resizeInit = '1';
+
+                const handle = document.createElement('div');
+                handle.className = 'modal-resize-handle';
+                modal.appendChild(handle);
+
+                let startX, startY, startW, startH;
+
+                function onMove(e) {
+                    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+                    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+                    const newW = Math.max(280, startW + cx - startX);
+                    const newH = Math.max(200, startH + cy - startY);
+                    modal.style.width    = newW + 'px';
+                    modal.style.maxWidth = 'none';
+                    modal.style.height   = newH + 'px';
+                    modal.style.maxHeight = 'none';
+                    modal.style.overflowY = 'auto';
+                }
+
+                function onUp() {
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup',   onUp);
+                    document.removeEventListener('touchmove', onMove);
+                    document.removeEventListener('touchend',  onUp);
+                }
+
+                handle.addEventListener('mousedown', e => {
+                    e.preventDefault();
+                    startX = e.clientX; startY = e.clientY;
+                    startW = modal.offsetWidth; startH = modal.offsetHeight;
+                    document.addEventListener('mousemove', onMove);
+                    document.addEventListener('mouseup',   onUp);
+                });
+
+                handle.addEventListener('touchstart', e => {
+                    e.preventDefault();
+                    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+                    startW = modal.offsetWidth; startH = modal.offsetHeight;
+                    document.addEventListener('touchmove', onMove, { passive: false });
+                    document.addEventListener('touchend',  onUp);
+                }, { passive: false });
+            });
+        }
+
+        // Observa abertura de modais e inicializa o resize
+        new MutationObserver(() => initModalResize())
+            .observe(document.body, { attributes: true, subtree: true, attributeFilter: ['style'] });
 
         // Verifica sessão existente ao carregar
         (async () => {
