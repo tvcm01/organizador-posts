@@ -4303,6 +4303,10 @@
             const startH = el.offsetHeight;
             const startW = card ? card.offsetWidth : null;
 
+            // No CSS Grid justify-self:stretch ignora width inline —
+            // precisa de 'start' para o width explícito funcionar
+            if (card) card.style.justifySelf = 'start';
+
             function onMove(ev) {
                 const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
                 const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
@@ -4311,8 +4315,7 @@
                 el.style.maxHeight = 'none';
                 if (card && startW !== null) {
                     const newW = Math.max(260, startW + cx - startX);
-                    card.style.width    = newW + 'px';
-                    card.style.minWidth = newW + 'px';
+                    card.style.width = newW + 'px';
                 }
             }
             function onUp() {
