@@ -2590,13 +2590,24 @@
             if (file) processCopyDocx(file);
         }
 
-        function processCopyDocx(file) {
-            file.arrayBuffer().then(buffer => mammoth.convertToHtml({ arrayBuffer: buffer })).then(r => {
-                copysDocxParsed = parseDocxHtml(r.value); // reusa o mesmo parser dos roteiros
-                document.getElementById('copy-drop-zone').style.display = 'none';
+        async function processCopyDocx(file) {
+            const dropZone = document.getElementById('copy-drop-zone');
+            dropZone.innerHTML = '<div class="drop-icon">⏳</div><p>Lendo arquivo...</p>';
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const result = await mammoth.convertToHtml({ arrayBuffer });
+                copysDocxParsed = parseDocxHtml(result.value);
+
+                if (!copysDocxParsed.length) {
+                    showToast('⚠️ Nenhum conteúdo encontrado no arquivo.');
+                    dropZone.innerHTML = '<div class="drop-icon">📄</div><p>Arraste um arquivo <strong>.docx</strong> aqui</p><button class="btn-select" type="button">ou clique para selecionar</button>';
+                    return;
+                }
+
+                dropZone.style.display = 'none';
                 document.getElementById('copy-import-grupo-wrap').style.display = '';
                 document.getElementById('btn-import-copys').style.display = '';
-                // Preview
+
                 const preview = document.getElementById('copy-docx-preview');
                 preview.innerHTML = `
                 <div class="docx-preview">
@@ -2612,7 +2623,11 @@
                         </div>
                     </div>`).join('')}
                 </div>`;
-            }).catch(() => showToast('❌ Erro ao ler o arquivo'));
+            } catch(e) {
+                console.error('processCopyDocx error:', e);
+                showToast('❌ Erro ao ler o arquivo: ' + (e.message || e));
+                dropZone.innerHTML = '<div class="drop-icon">📄</div><p>Arraste um arquivo <strong>.docx</strong> aqui</p><button class="btn-select" type="button">ou clique para selecionar</button>';
+            }
         }
 
         async function importarCopys() {
