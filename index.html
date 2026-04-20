@@ -2591,7 +2591,7 @@
         }
 
         function processCopyDocx(file) {
-            mammoth.convertToHtml({ arrayBuffer: file.arrayBuffer() }).then(r => {
+            file.arrayBuffer().then(buffer => mammoth.convertToHtml({ arrayBuffer: buffer })).then(r => {
                 copysDocxParsed = parseDocxHtml(r.value); // reusa o mesmo parser dos roteiros
                 document.getElementById('copy-drop-zone').style.display = 'none';
                 document.getElementById('copy-import-grupo-wrap').style.display = '';
