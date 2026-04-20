@@ -1482,6 +1482,26 @@
             outline: none;
             background: white;
         }
+        .copy-content-resize {
+            height: 10px;
+            cursor: s-resize;
+            background: var(--gray-100);
+            border-top: 1px solid var(--gray-200);
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: none;
+            user-select: none;
+        }
+        .copy-content-resize::before {
+            content: '';
+            display: block;
+            width: 32px;
+            height: 3px;
+            border-radius: 2px;
+            background: var(--gray-400);
+        }
         .copy-inline-actions {
             display: flex;
             gap: 0.4rem;
@@ -2366,6 +2386,7 @@
                     <button onmousedown="event.preventDefault();document.execCommand('underline')" title="Sublinhado"><u>U</u></button>
                 </div>
                 <div class="copy-inline-content" id="cic-${c.id}" contenteditable="true">${c.conteudo||''}</div>
+                <div class="copy-content-resize" onmousedown="startCopyContentResize(event,'${c.id}')" ontouchstart="startCopyContentResize(event,'${c.id}')"></div>
                 <div class="copy-inline-actions">
                     <button class="btn-sm blue" id="cisave-${c.id}" onclick="saveCopyEdit('${c.id}')">💾 Salvar</button>
                     <button class="btn-sm neutral" onclick="copyCopyToClipboard('${c.id}')">📋 Copiar</button>
@@ -4253,6 +4274,32 @@
         function showApp() {
             document.getElementById('login-overlay').style.display = 'none';
             loadPosts();
+        }
+
+        // ── Resize do editor inline de copys (altura) ────────────────────────
+        function startCopyContentResize(e, id) {
+            e.preventDefault();
+            const el = document.getElementById('cic-' + id);
+            if (!el) return;
+            const startY  = e.touches ? e.touches[0].clientY : e.clientY;
+            const startH  = el.offsetHeight;
+
+            function onMove(ev) {
+                const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
+                const newH = Math.max(80, startH + cy - startY);
+                el.style.height    = newH + 'px';
+                el.style.maxHeight = 'none';
+            }
+            function onUp() {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup',   onUp);
+                document.removeEventListener('touchmove', onMove);
+                document.removeEventListener('touchend',  onUp);
+            }
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup',   onUp);
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('touchend',  onUp);
         }
 
         // ── Resize de modais ─────────────────────────────────────────────────
