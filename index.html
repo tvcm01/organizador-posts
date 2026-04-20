@@ -2393,19 +2393,18 @@
         async function setCopyStatus(id, status) {
             const { error } = await db.from('posts').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
             if (error) { showToast('❌ Erro'); return; }
+            // Atualiza localmente e re-renderiza só o card (sem chamada ao banco)
             const idx = copys.findIndex(c => String(c.id) === String(id));
             if (idx !== -1) copys[idx].status = status;
-            openCopyEdit(id); // re-renderiza com novo status
+            openCopyEdit(id);
         }
 
         async function deleteCopy(id) {
             if (!confirm('Mover para a lixeira?')) return;
             const { error } = await db.from('posts').update({ status: 'Lixeira', updated_at: new Date().toISOString() }).eq('id', id);
             if (error) { showToast('❌ Erro'); return; }
-            const idx = copys.findIndex(c => String(c.id) === String(id));
-            if (idx !== -1) copys[idx].status = 'Lixeira';
             expandedCopyId = null;
-            renderCopys();
+            await loadPosts();
             showToast('🗑 Movido para lixeira');
         }
 
@@ -2463,7 +2462,7 @@
             await saveCopyGroupsMeta();
             btn.disabled = false;
             closeCopyGroupModal();
-            renderCopys();
+            await loadPosts();
             showToast('✓ Grupo salvo!');
         }
 
@@ -2495,10 +2494,9 @@
                 titulo, conteudo, tema: grupo, formato: 'Copy', status: 'Rascunho'
             }).select().single();
             if (error) { btn.disabled = false; btn.textContent = '❌ Erro'; showToast('❌ Erro ao salvar'); return; }
-            copys.push(data);
             btn.disabled = false; btn.textContent = 'Salvar';
             closeCopyNewModal();
-            renderCopys();
+            await loadPosts();
             showToast('✓ Copy adicionada!');
         }
 
@@ -2590,9 +2588,8 @@
             const { data, error } = await db.from('posts').insert(rows).select();
             btn.disabled = false;
             if (error) { btn.textContent = '❌ Erro'; showToast('❌ Erro ao importar'); return; }
-            copys.push(...(data || []));
             closeImportCopys();
-            renderCopys();
+            await loadPosts();
             showToast(`✓ ${selecionados.length} cop${selecionados.length>1?'ys':'y'} importada${selecionados.length>1?'s':''}!`);
         }
 
@@ -3305,14 +3302,18 @@
             document.getElementById('tab-copys').classList.toggle('active', isCopys);
             document.getElementById('tab-lixeira').classList.toggle('active', isLixeira);
             document.getElementById('temas-view').style.display       = isTemas ? '' : 'none';
-            document.getElementById('tema-desc-edit-wrap').style.display = isTemas ? 'none' : '';
+            // tema-desc-edit-wrap: só força none explicitamente, nunca '' (o CSS já define none por padrão)
+            if (isTemas) {
+                document.getElementById('tema-desc-edit-wrap').style.display = 'none';
+            }
             document.getElementById('tema-desc-edit-wrap').classList.remove('open');
             document.getElementById('posts-view').style.display       = isTemaPosts ? '' : 'none';
             document.getElementById('toolbar-wrap').style.display     = isTemaPosts ? '' : 'none';
             document.getElementById('copys-view').style.display       = isCopys ? '' : 'none';
             document.getElementById('lixeira-view').style.display     = isLixeira ? '' : 'none';
+            if (!isCopys) expandedCopyId = null; // limpa editor inline ao sair da aba
             if (isTemas)   renderThemes();
-            if (isCopys)   renderCopys();
+            if (isCopys)   loadPosts();   // sempre relê do banco ao entrar na aba
             if (isLixeira) renderLixeira();
         }
 
