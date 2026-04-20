@@ -1309,6 +1309,180 @@
         .toast.show {
             opacity: 1;
         }
+
+        /* ── Copys tab ─────────────────────────────────────────────────────── */
+        .copys-toolbar {
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            padding: 0.75rem 1.25rem;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .copys-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.25rem;
+            padding: 1.25rem;
+        }
+        .copy-group-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            border: 1px solid var(--gray-200);
+            display: flex;
+            flex-direction: column;
+        }
+        .copy-group-header {
+            padding: 0.875rem 1rem 0.75rem;
+            border-bottom: 1px solid var(--gray-100);
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+        .copy-group-tema {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -0.01em;
+            line-height: 1.3;
+        }
+        .copy-group-date {
+            font-size: 0.72rem;
+            color: var(--gray-400);
+            margin-top: 0.2rem;
+        }
+        .copy-group-count {
+            font-size: 0.68rem;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .copy-group-body {
+            padding: 0.6rem 0.875rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            flex: 1;
+        }
+        .copy-mini-card {
+            border-radius: 9px;
+            padding: 0.45rem 0.7rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            transition: filter 0.15s;
+            border: 1.5px solid transparent;
+        }
+        .copy-mini-card:hover { filter: brightness(0.94); }
+        .copy-mini-card.rascunho {
+            background: #fff;
+            border-color: var(--gray-300);
+        }
+        .copy-mini-card.pronto {
+            background: #16a34a;
+            color: white;
+        }
+        .copy-mini-card.gravado {
+            background: #2563eb;
+            color: white;
+        }
+        .copy-status-tag {
+            font-size: 0.6rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+            padding: 0.12rem 0.4rem;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+        .copy-mini-card.rascunho .copy-status-tag { background: var(--gray-100); color: var(--gray-500); }
+        .copy-mini-card.pronto .copy-status-tag  { background: rgba(255,255,255,0.25); color: #fff; }
+        .copy-mini-card.gravado .copy-status-tag  { background: rgba(255,255,255,0.25); color: #fff; }
+        .copy-mini-title {
+            font-size: 0.8rem;
+            font-weight: 500;
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .copy-mini-card.rascunho .copy-mini-title { color: var(--gray-700); }
+        /* Inline copy editor */
+        .copy-inline-wrap {
+            border: 2px solid var(--primary);
+            border-radius: 9px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .copy-inline-header {
+            background: var(--primary-light);
+            padding: 0.4rem 0.7rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .copy-inline-title-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            outline: none;
+        }
+        .copy-inline-content {
+            min-height: 120px;
+            max-height: 45vh;
+            overflow-y: auto;
+            padding: 0.6rem 0.75rem;
+            font-size: 0.83rem;
+            line-height: 1.65;
+            outline: none;
+            background: white;
+        }
+        .copy-inline-actions {
+            display: flex;
+            gap: 0.4rem;
+            padding: 0.45rem 0.7rem;
+            background: var(--gray-50);
+            border-top: 1px solid var(--gray-100);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .copy-group-footer {
+            padding: 0.55rem 0.875rem;
+            border-top: 1px solid var(--gray-100);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+        /* Modal copy import */
+        .copy-group-selector {
+            display: flex;
+            gap: 0.5rem;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            margin-bottom: 0.875rem;
+        }
+        .copy-group-selector > div { flex: 1; min-width: 140px; }
+        .copy-group-selector label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--gray-600); margin-bottom: 0.3rem; }
+        .copy-group-selector input, .copy-group-selector select {
+            width: 100%; padding: 0.45rem 0.65rem; border: 1px solid var(--gray-300);
+            border-radius: 8px; font-size: 0.82rem; outline: none; font-family: inherit;
+        }
+        .copy-group-selector input:focus, .copy-group-selector select:focus { border-color: var(--primary); }
     </style>
 </head>
 <body>
@@ -1341,6 +1515,7 @@
 
     <div class="view-tabs">
         <button class="view-tab active" id="tab-temas" onclick="setView('temas')">📁 Temas</button>
+        <button class="view-tab" id="tab-copys" onclick="setView('copys')">✍️ Copys</button>
         <button class="view-tab" id="tab-lixeira" onclick="setView('lixeira')">🗑 Lixeira <span class="tab-badge" id="trash-count" style="display:none"></span></button>
     </div>
 
@@ -1535,6 +1710,122 @@
         </div>
     </div>
     </div><!-- /posts-view -->
+
+    <!-- ── Copys view ──────────────────────────────────────────────────────── -->
+    <div id="copys-view" style="display:none">
+        <div class="copys-toolbar">
+            <button class="btn-header primary" style="font-size:0.8rem" onclick="openNewCopyGroupModal()">+ Novo grupo</button>
+            <button class="btn-header ghost" style="font-size:0.8rem;background:var(--primary);color:white;border-color:var(--primary)" onclick="openImportCopys()">⬇ Importar</button>
+        </div>
+        <div class="copys-grid" id="copys-container"></div>
+    </div>
+
+    <!-- Modal: novo grupo de copys -->
+    <div class="modal-overlay" id="copy-group-modal" style="display:none">
+        <div class="modal" style="max-width:400px">
+            <div class="modal-header">
+                <h2 class="modal-title" id="copy-group-modal-title">+ Novo grupo</h2>
+                <button class="modal-close" onclick="closeCopyGroupModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Tema / Nome do grupo</label>
+                    <input class="form-input" id="cg-tema" list="cg-temas-list" placeholder="Ex: TRT Qualificação #1">
+                    <datalist id="cg-temas-list"></datalist>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Data do lançamento</label>
+                    <input class="form-input" id="cg-data" type="date">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeCopyGroupModal()">Cancelar</button>
+                <button class="btn-save" id="cg-save-btn" onclick="saveCopyGroup()">Salvar grupo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: nova copy individual -->
+    <div class="modal-overlay" id="copy-new-modal" style="display:none">
+        <div class="modal" style="max-width:480px">
+            <div class="modal-header">
+                <h2 class="modal-title">+ Nova Copy</h2>
+                <button class="modal-close" onclick="closeCopyNewModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Grupo</label>
+                    <select class="form-input" id="cn-grupo"></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Título</label>
+                    <input class="form-input" id="cn-titulo" placeholder="Título da copy...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Conteúdo</label>
+                    <div class="rte-toolbar" style="margin-bottom:0.3rem">
+                        <button onmousedown="event.preventDefault();document.execCommand('bold')" title="Negrito"><b>B</b></button>
+                        <button onmousedown="event.preventDefault();document.execCommand('italic')" title="Itálico"><i>I</i></button>
+                        <button onmousedown="event.preventDefault();document.execCommand('underline')" title="Sublinhado"><u>U</u></button>
+                    </div>
+                    <div class="rte-editor" id="cn-conteudo" contenteditable="true" style="min-height:120px"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeCopyNewModal()">Cancelar</button>
+                <button class="btn-save" id="cn-save-btn" onclick="saveNewCopy()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: importar copys do docx -->
+    <div class="modal-overlay" id="import-copys-overlay" style="display:none">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">⬇ Importar Copys</h2>
+                <button class="modal-close" onclick="closeImportCopys()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="drop-zone" id="copy-drop-zone" onclick="document.getElementById('copy-file-input').click()"
+                     ondrop="handleCopyDrop(event)" ondragover="event.preventDefault();this.classList.add('drag-over')"
+                     ondragleave="this.classList.remove('drag-over')">
+                    <div class="drop-icon">📄</div>
+                    <p>Arraste um arquivo <strong>.docx</strong> aqui</p>
+                    <button class="btn-select" type="button">ou clique para selecionar</button>
+                </div>
+                <input type="file" id="copy-file-input" accept=".docx" style="display:none" onchange="handleCopyFile(event)">
+
+                <div id="copy-import-grupo-wrap" style="display:none">
+                    <div class="copy-group-selector">
+                        <div>
+                            <label>Adicionar ao grupo</label>
+                            <select id="ci-grupo-select" onchange="onCiGrupoChange()">
+                                <option value="__novo__">+ Criar novo grupo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="ci-novo-grupo-wrap" style="display:none">
+                        <div class="copy-group-selector">
+                            <div>
+                                <label>Nome do grupo</label>
+                                <input id="ci-novo-tema" list="ci-temas-list" placeholder="Tema / nome...">
+                                <datalist id="ci-temas-list"></datalist>
+                            </div>
+                            <div>
+                                <label>Data do lançamento</label>
+                                <input id="ci-novo-data" type="date">
+                            </div>
+                        </div>
+                    </div>
+                    <div id="copy-docx-preview"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeImportCopys()">Cancelar</button>
+                <button class="btn-save" id="btn-import-copys" onclick="importarCopys()" style="display:none">⬇ Importar selecionados</button>
+            </div>
+        </div>
+    </div>
 
     <div class="content" id="lixeira-view" style="display:none">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:0.75rem;background:white;border-radius:8px;padding:0.6rem 0.875rem;border:1px solid var(--gray-200)">
@@ -1874,8 +2165,13 @@
         let compactMode = false;
         let selectedTema = null;
         let temaDescriptions = JSON.parse(localStorage.getItem('tema_descriptions') || '{}');
-        let temaMetaId = null; // ID da linha oculta que guarda as descrições no Supabase
+        let temaMetaId = null;
         const TEMA_META_TITULO = '__tema_descriptions__';
+        let copys = [];
+        let copyGroups = {}; // { "nome_grupo": { data: "YYYY-MM-DD" } }
+        let copyGroupMetaId = null;
+        const COPY_GROUP_META = '__copy_groups__';
+        let expandedCopyId = null; // copy com editor inline aberto
 
         const TEMA_GRADIENTS = [
             'linear-gradient(135deg,#667eea,#764ba2)',
@@ -1954,6 +2250,350 @@
                 }).select('id').single();
                 if (data) temaMetaId = data.id;
             }
+        }
+
+        // ── Copys ────────────────────────────────────────────────────────────
+
+        async function saveCopyGroupsMeta() {
+            const json = JSON.stringify(copyGroups);
+            if (copyGroupMetaId) {
+                await db.from('posts').update({ conteudo: json, updated_at: new Date().toISOString() }).eq('id', copyGroupMetaId);
+            } else {
+                const { data } = await db.from('posts').insert({ titulo: COPY_GROUP_META, conteudo: json, status: '__meta__', formato: '__meta__' }).select('id').single();
+                if (data) copyGroupMetaId = data.id;
+            }
+        }
+
+        function renderCopys() {
+            const container = document.getElementById('copys-container');
+            // Agrupa por tema (grupo)
+            const grupos = {};
+            copys.filter(c => c.status !== 'Lixeira').forEach(c => {
+                const g = c.tema || '(Sem grupo)';
+                if (!grupos[g]) grupos[g] = [];
+                grupos[g].push(c);
+            });
+            const nomes = Object.keys(grupos).sort((a, b) => {
+                const da = copyGroups[a]?.data || '';
+                const db2 = copyGroups[b]?.data || '';
+                return da < db2 ? 1 : da > db2 ? -1 : a.localeCompare(b);
+            });
+            if (!nomes.length) {
+                container.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="icon">✍️</div><p>Nenhuma copy ainda.<br>Crie um grupo e comece a adicionar.</p></div>`;
+                return;
+            }
+            container.innerHTML = nomes.map(nome => {
+                const lista = grupos[nome].sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+                const meta = copyGroups[nome] || {};
+                const dataFmt = meta.data ? new Date(meta.data + 'T12:00:00').toLocaleDateString('pt-BR') : '';
+                const miniCards = lista.map(c => renderCopyMiniCard(c)).join('');
+                return `
+                <div class="copy-group-card">
+                    <div class="copy-group-header">
+                        <div>
+                            <div class="copy-group-tema">${esc(nome)}</div>
+                            ${dataFmt ? `<div class="copy-group-date">📅 ${dataFmt}</div>` : ''}
+                        </div>
+                        <div style="display:flex;gap:0.35rem;align-items:center">
+                            <span class="copy-group-count">${lista.length}</span>
+                            <button class="btn-sm" style="font-size:0.7rem;padding:0.2rem 0.45rem" onclick="editCopyGroup('${esc(nome)}')" title="Editar grupo">✏️</button>
+                        </div>
+                    </div>
+                    <div class="copy-group-body" id="cg-body-${esc(nome).replace(/[^a-z0-9]/gi,'_')}">${miniCards}</div>
+                    <div class="copy-group-footer">
+                        <button class="btn-sm blue" style="font-size:0.72rem" onclick="openNewCopyInGroup('${esc(nome)}')">+ Add copy</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function renderCopyMiniCard(c) {
+            const st = (c.status || 'Rascunho').toLowerCase().replace('ã','a').replace('í','i');
+            const cls = st === 'gravado' ? 'gravado' : st === 'pronto' ? 'pronto' : 'rascunho';
+            if (expandedCopyId === c.id) return renderCopyInlineEditor(c);
+            return `
+            <div class="copy-mini-card ${cls}" id="copy-mini-${c.id}" onclick="openCopyEdit('${c.id}')">
+                <span class="copy-status-tag">${c.status||'Rascunho'}</span>
+                <span class="copy-mini-title">${esc(c.titulo||'Sem título')}</span>
+            </div>`;
+        }
+
+        function renderCopyInlineEditor(c) {
+            const st = (c.status || 'Rascunho').toLowerCase().replace('ã','a').replace('í','i');
+            const cls = st === 'gravado' ? 'gravado' : st === 'pronto' ? 'pronto' : 'rascunho';
+            return `
+            <div class="copy-inline-wrap" id="copy-mini-${c.id}">
+                <div class="copy-inline-header copy-mini-card ${cls}" style="cursor:default;border-radius:0">
+                    <span class="copy-status-tag">${c.status||'Rascunho'}</span>
+                    <input class="copy-inline-title-input" id="cit-${c.id}" value="${esc(c.titulo||'')}" placeholder="Título...">
+                    <button class="btn-sm neutral" style="font-size:0.68rem;padding:0.15rem 0.4rem" onclick="closeCopyEdit('${c.id}')">✕</button>
+                </div>
+                <div class="rte-toolbar" style="padding:0.3rem 0.6rem;background:var(--gray-50);border-bottom:1px solid var(--gray-100)">
+                    <button onmousedown="event.preventDefault();document.execCommand('bold')" title="Negrito"><b>B</b></button>
+                    <button onmousedown="event.preventDefault();document.execCommand('italic')" title="Itálico"><i>I</i></button>
+                    <button onmousedown="event.preventDefault();document.execCommand('underline')" title="Sublinhado"><u>U</u></button>
+                </div>
+                <div class="copy-inline-content" id="cic-${c.id}" contenteditable="true">${c.conteudo||''}</div>
+                <div class="copy-inline-actions">
+                    <button class="btn-sm blue" id="cisave-${c.id}" onclick="saveCopyEdit('${c.id}')">💾 Salvar</button>
+                    <button class="btn-sm neutral" onclick="copyCopyToClipboard('${c.id}')">📋 Copiar</button>
+                    <div style="flex:1"></div>
+                    ${c.status !== 'Rascunho' ? `<button class="btn-sm neutral" onclick="setCopyStatus('${c.id}','Rascunho')">Rascunho</button>` : ''}
+                    ${c.status !== 'Pronto'   ? `<button class="btn-sm" style="background:#16a34a;color:white" onclick="setCopyStatus('${c.id}','Pronto')">Pronto</button>` : ''}
+                    ${c.status !== 'Gravado'  ? `<button class="btn-sm" style="background:#2563eb;color:white" onclick="setCopyStatus('${c.id}','Gravado')">Gravado</button>` : ''}
+                    <button class="btn-sm danger" onclick="deleteCopy('${c.id}')">🗑</button>
+                </div>
+            </div>`;
+        }
+
+        function openCopyEdit(id) {
+            expandedCopyId = id;
+            const c = copys.find(x => String(x.id) === String(id));
+            if (!c) return;
+            const bodyId = 'cg-body-' + (c.tema||'').replace(/[^a-z0-9]/gi,'_');
+            const bodyEl = document.getElementById(bodyId);
+            if (!bodyEl) { renderCopys(); return; }
+            // Só re-renderiza os mini-cards desse grupo
+            const lista = copys.filter(x => x.tema === c.tema && x.status !== 'Lixeira').sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+            bodyEl.innerHTML = lista.map(renderCopyMiniCard).join('');
+            setTimeout(() => {
+                const ed = document.getElementById('cic-' + id);
+                if (ed) { ed.focus(); placeCaretAtEnd(ed); }
+            }, 50);
+        }
+
+        function closeCopyEdit(id) {
+            expandedCopyId = null;
+            const c = copys.find(x => String(x.id) === String(id));
+            if (!c) return;
+            const bodyId = 'cg-body-' + (c.tema||'').replace(/[^a-z0-9]/gi,'_');
+            const bodyEl = document.getElementById(bodyId);
+            if (!bodyEl) return;
+            const lista = copys.filter(x => x.tema === c.tema && x.status !== 'Lixeira').sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+            bodyEl.innerHTML = lista.map(renderCopyMiniCard).join('');
+        }
+
+        async function saveCopyEdit(id) {
+            const titleEl = document.getElementById('cit-' + id);
+            const contEl  = document.getElementById('cic-' + id);
+            if (!titleEl || !contEl) return;
+            const titulo   = titleEl.value.trim();
+            const conteudo = contEl.innerHTML;
+            if (!titulo) { showToast('⚠️ Título obrigatório'); titleEl.focus(); return; }
+            const btn = document.getElementById('cisave-' + id);
+            if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+            const { error } = await db.from('posts').update({ titulo, conteudo, updated_at: new Date().toISOString() }).eq('id', id);
+            if (error) { if (btn) { btn.disabled = false; btn.textContent = '❌ Erro'; } showToast('❌ Erro ao salvar'); return; }
+            const idx = copys.findIndex(c => String(c.id) === String(id));
+            if (idx !== -1) { copys[idx].titulo = titulo; copys[idx].conteudo = conteudo; }
+            if (btn) { btn.disabled = false; btn.textContent = '✓ Salvo!'; setTimeout(() => { if(btn) btn.textContent = '💾 Salvar'; }, 2000); }
+            showToast('✓ Salvo!');
+        }
+
+        async function setCopyStatus(id, status) {
+            const { error } = await db.from('posts').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
+            if (error) { showToast('❌ Erro'); return; }
+            const idx = copys.findIndex(c => String(c.id) === String(id));
+            if (idx !== -1) copys[idx].status = status;
+            openCopyEdit(id); // re-renderiza com novo status
+        }
+
+        async function deleteCopy(id) {
+            if (!confirm('Mover para a lixeira?')) return;
+            const { error } = await db.from('posts').update({ status: 'Lixeira', updated_at: new Date().toISOString() }).eq('id', id);
+            if (error) { showToast('❌ Erro'); return; }
+            const idx = copys.findIndex(c => String(c.id) === String(id));
+            if (idx !== -1) copys[idx].status = 'Lixeira';
+            expandedCopyId = null;
+            renderCopys();
+            showToast('🗑 Movido para lixeira');
+        }
+
+        function copyCopyToClipboard(id) {
+            const contEl = document.getElementById('cic-' + id);
+            if (!contEl) return;
+            const text = contEl.innerText || contEl.textContent;
+            navigator.clipboard.writeText(text).then(() => showToast('📋 Copiado!')).catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = text; document.body.appendChild(ta); ta.select();
+                document.execCommand('copy'); document.body.removeChild(ta);
+                showToast('📋 Copiado!');
+            });
+        }
+
+        // ── Modais de grupos / novas copys ────────────────────────────────────
+
+        let copyGroupEditMode = null; // null = novo, string = nome do grupo sendo editado
+
+        function openNewCopyGroupModal(preNome) {
+            copyGroupEditMode = null;
+            document.getElementById('copy-group-modal-title').textContent = '+ Novo grupo';
+            document.getElementById('cg-tema').value = preNome || '';
+            document.getElementById('cg-data').value = new Date().toISOString().split('T')[0];
+            document.getElementById('copy-group-modal').style.display = 'flex';
+        }
+
+        function editCopyGroup(nome) {
+            copyGroupEditMode = nome;
+            document.getElementById('copy-group-modal-title').textContent = '✏️ Editar grupo';
+            document.getElementById('cg-tema').value = nome;
+            document.getElementById('cg-data').value = copyGroups[nome]?.data || '';
+            document.getElementById('copy-group-modal').style.display = 'flex';
+        }
+
+        function closeCopyGroupModal() {
+            document.getElementById('copy-group-modal').style.display = 'none';
+        }
+
+        async function saveCopyGroup() {
+            const tema = document.getElementById('cg-tema').value.trim();
+            const data = document.getElementById('cg-data').value;
+            if (!tema) { showToast('⚠️ Informe o nome do grupo'); return; }
+            const btn = document.getElementById('cg-save-btn');
+            btn.disabled = true;
+            if (copyGroupEditMode && copyGroupEditMode !== tema) {
+                // Renomear: atualiza todas as copys do grupo antigo
+                const ids = copys.filter(c => c.tema === copyGroupEditMode).map(c => c.id);
+                if (ids.length) await db.from('posts').update({ tema }).in('id', ids);
+                copys.filter(c => c.tema === copyGroupEditMode).forEach(c => c.tema = tema);
+                copyGroups[tema] = copyGroups[copyGroupEditMode];
+                delete copyGroups[copyGroupEditMode];
+            }
+            copyGroups[tema] = { data };
+            await saveCopyGroupsMeta();
+            btn.disabled = false;
+            closeCopyGroupModal();
+            renderCopys();
+            showToast('✓ Grupo salvo!');
+        }
+
+        function openNewCopyInGroup(tema) {
+            const sel = document.getElementById('cn-grupo');
+            sel.innerHTML = Object.keys(copyGroups).map(g => `<option value="${esc(g)}" ${g===tema?'selected':''}>${esc(g)}</option>`).join('');
+            if (!sel.options.length) {
+                showToast('⚠️ Crie um grupo primeiro'); openNewCopyGroupModal(); return;
+            }
+            document.getElementById('cn-titulo').value = '';
+            document.getElementById('cn-conteudo').innerHTML = '';
+            document.getElementById('cn-save-btn').disabled = false;
+            document.getElementById('cn-save-btn').textContent = 'Salvar';
+            document.getElementById('copy-new-modal').style.display = 'flex';
+        }
+
+        function closeCopyNewModal() {
+            document.getElementById('copy-new-modal').style.display = 'none';
+        }
+
+        async function saveNewCopy() {
+            const grupo   = document.getElementById('cn-grupo').value;
+            const titulo  = document.getElementById('cn-titulo').value.trim();
+            const conteudo = document.getElementById('cn-conteudo').innerHTML;
+            if (!titulo) { showToast('⚠️ Título obrigatório'); document.getElementById('cn-titulo').focus(); return; }
+            const btn = document.getElementById('cn-save-btn');
+            btn.disabled = true; btn.textContent = 'Salvando...';
+            const { data, error } = await db.from('posts').insert({
+                titulo, conteudo, tema: grupo, formato: 'Copy', status: 'Rascunho'
+            }).select().single();
+            if (error) { btn.disabled = false; btn.textContent = '❌ Erro'; showToast('❌ Erro ao salvar'); return; }
+            copys.push(data);
+            btn.disabled = false; btn.textContent = 'Salvar';
+            closeCopyNewModal();
+            renderCopys();
+            showToast('✓ Copy adicionada!');
+        }
+
+        // ── Importar Copys ────────────────────────────────────────────────────
+
+        let copysDocxParsed = [];
+
+        function openImportCopys() {
+            document.getElementById('copy-drop-zone').style.display = '';
+            document.getElementById('copy-import-grupo-wrap').style.display = 'none';
+            document.getElementById('btn-import-copys').style.display = 'none';
+            document.getElementById('copy-file-input').value = '';
+            copysDocxParsed = [];
+            // Preenche select de grupos existentes
+            const sel = document.getElementById('ci-grupo-select');
+            sel.innerHTML = '<option value="__novo__">+ Criar novo grupo</option>' +
+                Object.keys(copyGroups).map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join('');
+            onCiGrupoChange();
+            document.getElementById('import-copys-overlay').style.display = 'flex';
+        }
+
+        function closeImportCopys() {
+            document.getElementById('import-copys-overlay').style.display = 'none';
+        }
+
+        function onCiGrupoChange() {
+            const val = document.getElementById('ci-grupo-select').value;
+            document.getElementById('ci-novo-grupo-wrap').style.display = val === '__novo__' ? '' : 'none';
+        }
+
+        function handleCopyDrop(e) {
+            e.preventDefault();
+            document.getElementById('copy-drop-zone').classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file) processCopyDocx(file);
+        }
+
+        function handleCopyFile(e) {
+            const file = e.target.files[0];
+            if (file) processCopyDocx(file);
+        }
+
+        function processCopyDocx(file) {
+            mammoth.convertToHtml({ arrayBuffer: file.arrayBuffer() }).then(r => {
+                copysDocxParsed = parseDocxHtml(r.value); // reusa o mesmo parser dos roteiros
+                document.getElementById('copy-drop-zone').style.display = 'none';
+                document.getElementById('copy-import-grupo-wrap').style.display = '';
+                document.getElementById('btn-import-copys').style.display = '';
+                // Preview
+                const preview = document.getElementById('copy-docx-preview');
+                preview.innerHTML = `
+                <div class="docx-preview">
+                    <div class="docx-preview-header">
+                        <span>${copysDocxParsed.length} roteiro(s) encontrado(s) — <button style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:0.72rem;font-weight:700" onclick="document.querySelectorAll('.copy-docx-chk').forEach(c=>c.checked=true)">Marcar todos</button></span>
+                    </div>
+                    ${copysDocxParsed.map((p,i) => `
+                    <div class="docx-post-item">
+                        <input type="checkbox" class="copy-docx-chk" data-idx="${i}" checked>
+                        <div>
+                            <div class="post-preview-title">${esc(p.titulo||'Sem título')}</div>
+                            <div class="post-preview-snippet">${esc(htmlToPlainText(p.conteudo||'').substring(0,80))}</div>
+                        </div>
+                    </div>`).join('')}
+                </div>`;
+            }).catch(() => showToast('❌ Erro ao ler o arquivo'));
+        }
+
+        async function importarCopys() {
+            const selecionados = [...document.querySelectorAll('.copy-docx-chk:checked')].map(el => copysDocxParsed[+el.dataset.idx]);
+            if (!selecionados.length) { showToast('⚠️ Selecione ao menos um'); return; }
+            const grupoSel = document.getElementById('ci-grupo-select').value;
+            let grupo = grupoSel;
+            if (grupoSel === '__novo__') {
+                grupo = document.getElementById('ci-novo-tema').value.trim();
+                const data = document.getElementById('ci-novo-data').value;
+                if (!grupo) { showToast('⚠️ Informe o nome do grupo'); return; }
+                copyGroups[grupo] = { data };
+                await saveCopyGroupsMeta();
+            }
+            const btn = document.getElementById('btn-import-copys');
+            btn.disabled = true; btn.textContent = 'Importando...';
+            const rows = selecionados.map(p => ({
+                titulo: p.titulo || 'Sem título',
+                conteudo: p.conteudo || '',
+                tema: grupo,
+                formato: 'Copy',
+                status: 'Rascunho'
+            }));
+            const { data, error } = await db.from('posts').insert(rows).select();
+            btn.disabled = false;
+            if (error) { btn.textContent = '❌ Erro'; showToast('❌ Erro ao importar'); return; }
+            copys.push(...(data || []));
+            closeImportCopys();
+            renderCopys();
+            showToast(`✓ ${selecionados.length} cop${selecionados.length>1?'ys':'y'} importada${selecionados.length>1?'s':''}!`);
         }
 
         // ─── Render galeria de temas ──────────────────────────
@@ -2081,7 +2721,7 @@
                 document.getElementById('posts-container').innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>Erro ao conectar. Verifique o console.</p></div>';
                 return;
             }
-            // Extrai linha especial de descrições de temas (oculta dos posts)
+            // Extrai linhas de metadados e separa copys dos roteiros
             const allData = data || [];
             const metaRow = allData.find(p => p.titulo === TEMA_META_TITULO);
             if (metaRow) {
@@ -2092,7 +2732,14 @@
                     localStorage.setItem('tema_descriptions', JSON.stringify(saved));
                 } catch(e) {}
             }
-            posts = allData.filter(p => p.titulo !== TEMA_META_TITULO);
+            const cgMetaRow = allData.find(p => p.titulo === COPY_GROUP_META);
+            if (cgMetaRow) {
+                copyGroupMetaId = cgMetaRow.id;
+                try { copyGroups = JSON.parse(cgMetaRow.conteudo || '{}'); } catch(e) {}
+            }
+            const isMeta = p => p.titulo === TEMA_META_TITULO || p.titulo === COPY_GROUP_META;
+            copys = allData.filter(p => !isMeta(p) && p.formato === 'Copy');
+            posts = allData.filter(p => !isMeta(p) && p.formato !== 'Copy');
             // Atualiza badge da lixeira
             const lixeiraCount = posts.filter(p => p.status === 'Lixeira').length;
             const badge = document.getElementById('trash-count');
@@ -2101,6 +2748,7 @@
             // Re-renderiza a view atual
             if (viewMode === 'lixeira') renderLixeira();
             else if (viewMode === 'tema-posts') renderPosts();
+            else if (viewMode === 'copys') renderCopys();
             else renderThemes();
             updateStats();
         }
@@ -2651,16 +3299,20 @@
             viewMode = mode;
             const isTemas     = mode === 'temas';
             const isTemaPosts = mode === 'tema-posts';
+            const isCopys     = mode === 'copys';
             const isLixeira   = mode === 'lixeira';
             document.getElementById('tab-temas').classList.toggle('active', isTemas || isTemaPosts);
+            document.getElementById('tab-copys').classList.toggle('active', isCopys);
             document.getElementById('tab-lixeira').classList.toggle('active', isLixeira);
             document.getElementById('temas-view').style.display       = isTemas ? '' : 'none';
             document.getElementById('tema-desc-edit-wrap').style.display = isTemas ? 'none' : '';
             document.getElementById('tema-desc-edit-wrap').classList.remove('open');
             document.getElementById('posts-view').style.display       = isTemaPosts ? '' : 'none';
             document.getElementById('toolbar-wrap').style.display     = isTemaPosts ? '' : 'none';
+            document.getElementById('copys-view').style.display       = isCopys ? '' : 'none';
             document.getElementById('lixeira-view').style.display     = isLixeira ? '' : 'none';
             if (isTemas)   renderThemes();
+            if (isCopys)   renderCopys();
             if (isLixeira) renderLixeira();
         }
 
