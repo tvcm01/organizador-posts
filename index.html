@@ -3581,7 +3581,7 @@
             });
             if (roteiroNodes.length > 1) {
                 const sections = splitNodes(nodes, n => roteiroNodes.includes(n), true);
-                if (sections.length > 1) return sections.map(extractSection);
+                if (sections.length > 1) return sections.map(s => extractSection(s));
             }
 
             // Estratégia 0c — separar por "Copy N" / "Copy N - Título" (padrão de copys)
@@ -3592,7 +3592,7 @@
             });
             if (copyNodes.length > 1) {
                 const sections = splitNodes(nodes, n => copyNodes.includes(n), true);
-                if (sections.length > 1) return sections.map(extractSection);
+                if (sections.length > 1) return sections.map(s => extractSection(s));
             }
 
             // Estratégia 0b — separar por "NN — Papel" em negrito (ex: "01 — Mentor", "02 — Pensador")
@@ -3609,13 +3609,13 @@
                 const sections = splitNodes(nodes, n => papelNumNodes.includes(n), true);
                 // Descarta seção de cabeçalho (antes do primeiro roteiro numerado)
                 const filtered = sections.filter(s => s.length && papelNumNodes.includes(s[0]));
-                if (filtered.length > 1) return filtered.map(extractSection);
+                if (filtered.length > 1) return filtered.map(s => extractSection(s));
             }
 
             // Estratégia 1 — separar por <hr> (quebras de página explícitas)
             if (div.querySelector('hr')) {
                 const sections = splitNodes(nodes, n => n.tagName === 'HR', false);
-                if (sections.length > 1) return sections.map(extractSection);
+                if (sections.length > 1) return sections.map(s => extractSection(s));
             }
 
             // Estratégia 2 — separar por parágrafos completamente em negrito (títulos sem estilo)
@@ -3631,7 +3631,7 @@
             // Só usa essa estratégia se encontrar poucos bold-titles (≤10), evita false positives
             if (boldTitles.length > 1 && boldTitles.length <= 10) {
                 const sections = splitNodes(nodes, n => boldTitles.includes(n), true);
-                if (sections.length > 1) return sections.map(extractSection);
+                if (sections.length > 1) return sections.map(s => extractSection(s));
             }
 
             // Estratégia 3 — separar por linhas em branco múltiplas (≥2 <p> vazios seguidos)
@@ -3639,7 +3639,7 @@
             if (blankRuns.length > 0) {
                 const sections = splitNodes(nodes, n => blankRuns.includes(n), false);
                 const filtered = sections.filter(s => s.some(n => n.textContent.trim()));
-                if (filtered.length > 1) return filtered.map(extractSection);
+                if (filtered.length > 1) return filtered.map(s => extractSection(s));
             }
 
             // Estratégia 4 — headings H1/H2/H3 (markdown / Word com estilos nomeados)
