@@ -386,6 +386,37 @@
             color: white;
             backdrop-filter: blur(4px);
         }
+        /* ── Vista de resultados filtrados (temas view) ─────── */
+        .temas-results {
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.75rem;
+        }
+        .temas-results-group-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-light);
+        }
+        .temas-results-group-name {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--gray-800);
+            letter-spacing: -0.01em;
+        }
+        .temas-results-group-count {
+            font-size: 0.72rem;
+            font-weight: 600;
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 0.15rem 0.55rem;
+            border-radius: 20px;
+        }
+        [data-theme="dark"] .temas-results-group-header { border-color: var(--primary-light); }
+        [data-theme="dark"] .temas-results-group-name   { color: var(--gray-800); }
         .tema-edit-btn {
             position: absolute;
             top: 0.875rem;
@@ -2969,13 +3000,34 @@
             const temasSorted = Object.keys(grupos).sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
             if (!temasSorted.length) {
+                container.className = 'temas-grid';
                 container.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
-                    <div class="icon">📁</div>
-                    <p>Nenhum post ainda.<br>Importe um arquivo ou crie o primeiro post!</p>
+                    <div class="icon">${posts.length === 0 ? '📁' : '🔍'}</div>
+                    <p>${posts.length === 0 ? 'Nenhum post ainda.<br>Importe um arquivo ou crie o primeiro post!' : 'Nenhum roteiro encontrado com esses filtros.'}</p>
                 </div>`;
                 return;
             }
 
+            // Com filtro ativo → mostra roteiros diretamente agrupados por tema
+            if (hasFilter) {
+                container.className = 'temas-results';
+                container.innerHTML = temasSorted.map(nome => {
+                    const temaPosts = ativos.filter(p => (p.tema || '(Sem tema)') === nome);
+                    const n = temaPosts.length;
+                    return `
+                    <div class="temas-results-group">
+                        <div class="temas-results-group-header">
+                            <span class="temas-results-group-name">📁 ${esc(nome)}</span>
+                            <span class="temas-results-group-count">${n} roteiro${n !== 1 ? 's' : ''}</span>
+                        </div>
+                        <div class="posts-grid">${temaPosts.map(p => cardHTML(p)).join('')}</div>
+                    </div>`;
+                }).join('');
+                return;
+            }
+
+            // Sem filtro → galeria normal de cards de tema
+            container.className = 'temas-grid';
             container.innerHTML = temasSorted.map(nome => {
                 const g = grupos[nome];
                 const grad = getTemaGradient(nome);
