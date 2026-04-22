@@ -1550,7 +1550,117 @@
             border-radius: 8px; font-size: 0.82rem; outline: none; font-family: inherit;
         }
         .copy-group-selector input:focus, .copy-group-selector select:focus { border-color: var(--primary); }
+
+        /* ── Resize inline editor (roteiros) ──────────────────────────────── */
+        .post-card.inline-expanded { position: relative; }
+        .inline-editor-resize {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 22px;
+            height: 22px;
+            cursor: se-resize;
+            z-index: 10;
+            touch-action: none;
+            user-select: none;
+            border-radius: 0 0 10px 0;
+            opacity: 0.45;
+        }
+        .inline-editor-resize::before,
+        .inline-editor-resize::after {
+            content: '';
+            position: absolute;
+            background: var(--gray-600);
+            border-radius: 1px;
+        }
+        .inline-editor-resize::before { right: 4px; bottom: 9px; width: 12px; height: 2px; transform: rotate(-45deg); }
+        .inline-editor-resize::after  { right: 4px; bottom: 4px; width: 8px;  height: 2px; transform: rotate(-45deg); }
+        .inline-editor-resize:hover { opacity: 0.8; }
+
+        /* ── Modo escuro ───────────────────────────────────────────────────── */
+        [data-theme="dark"] {
+            --primary: #818cf8;
+            --primary-dark: #6366f1;
+            --primary-light: #1e1b4b;
+            --success: #34d399;
+            --blue: #60a5fa;
+            --blue-light: #172554;
+            --danger: #f87171;
+            --gray-50:  #1e293b;
+            --gray-100: #0f172a;
+            --gray-200: #334155;
+            --gray-300: #475569;
+            --gray-400: #64748b;
+            --gray-500: #94a3b8;
+            --gray-600: #cbd5e1;
+            --gray-700: #e2e8f0;
+            --gray-800: #f1f5f9;
+        }
+        [data-theme="dark"] body { background: #0f172a; color: #e2e8f0; }
+        /* Bars */
+        [data-theme="dark"] .stats,
+        [data-theme="dark"] .toolbar,
+        [data-theme="dark"] .view-tabs,
+        [data-theme="dark"] .tema-detail-bar,
+        [data-theme="dark"] .copys-toolbar { background: #1e293b; border-color: #334155; }
+        [data-theme="dark"] .stat  { border-color: #334155; }
+        /* Cards */
+        [data-theme="dark"] .post-card  { background: #1e293b; border-color: #334155; }
+        [data-theme="dark"] .post-card.pronto { background: #042f1a; }
+        [data-theme="dark"] .post-card.usado  { background: #0c1e32; }
+        [data-theme="dark"] .trash-card { background: #1e293b; border-color: #334155; }
+        /* Modal */
+        [data-theme="dark"] .modal        { background: #1e293b; color: #e2e8f0; }
+        [data-theme="dark"] .modal-header { background: #1e293b; border-color: #334155; }
+        [data-theme="dark"] .modal-footer { background: #1e293b; border-color: #334155; }
+        /* Inputs / selects */
+        [data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+        [data-theme="dark"] select,
+        [data-theme="dark"] textarea { background: #0f172a !important; color: #e2e8f0 !important; border-color: #475569 !important; }
+        /* Inline editor (roteiros) */
+        [data-theme="dark"] .inline-editor       { background: #0f172a; color: #e2e8f0; border-color: #475569; }
+        [data-theme="dark"] .inline-editor:focus  { background: #1e293b; }
+        /* RTE toolbars */
+        [data-theme="dark"] .rte-toolbar,
+        [data-theme="dark"] .inline-rte-toolbar   { background: #1e293b !important; border-color: #334155 !important; }
+        [data-theme="dark"] .rte-toolbar button,
+        [data-theme="dark"] .inline-rte-toolbar button { color: #e2e8f0; background: #293548; border-color: #475569; }
+        [data-theme="dark"] .rte-content          { background: #1e293b; color: #e2e8f0; }
+        /* Copys */
+        [data-theme="dark"] .copy-group-card    { background: #1e293b; border-color: #334155; }
+        [data-theme="dark"] .copy-group-header  { border-color: #334155; }
+        [data-theme="dark"] .copy-group-body    { background: #1e293b; }
+        [data-theme="dark"] .copy-group-footer  { background: #0f172a; border-color: #334155; }
+        [data-theme="dark"] .copy-mini-card.rascunho { background: #293548; border-color: #475569; }
+        [data-theme="dark"] .copy-inline-content    { background: #0f172a; color: #e2e8f0; }
+        [data-theme="dark"] .copy-inline-header     { background: #1e1b4b !important; }
+        [data-theme="dark"] .copy-inline-actions    { background: #0f172a; border-color: #334155; }
+        [data-theme="dark"] .copy-content-resize    { background: #334155 !important; }
+        /* Filter pills */
+        [data-theme="dark"] .filter-pill          { background: #1e293b; border-color: #475569; color: #cbd5e1; }
+        [data-theme="dark"] .filter-pill.has-selection { background: var(--primary); color: white; }
+        [data-theme="dark"] .pill-dropdown        { background: #1e293b; border-color: #334155; }
+        [data-theme="dark"] .pill-option          { color: #e2e8f0; }
+        [data-theme="dark"] .pill-option:hover    { background: #293548; }
+        [data-theme="dark"] .pill-option.selected { background: var(--primary-light); color: var(--primary); }
+        /* Grupos */
+        [data-theme="dark"] .grupo-header,
+        [data-theme="dark"] .grupo-wrapper { background: #1e293b; border-color: #334155; }
+        /* Teleprompter */
+        [data-theme="dark"] .teleprompter-text { background: #0f172a; color: #e2e8f0; }
+        [data-theme="dark"] .copy-bar          { background: #0f172a; }
+        /* Misc */
+        [data-theme="dark"] .login-box         { background: #1e293b; }
+        [data-theme="dark"] .drop-zone         { background: #1e293b; border-color: #475569; }
+        [data-theme="dark"] .docx-post-preview { background: #293548; border-color: #334155; }
+        [data-theme="dark"] .card-title        { color: #cbd5e1; }
+        [data-theme="dark"] .card-content      { color: #94a3b8; }
+        [data-theme="dark"] .copy-group-tema   { color: #e2e8f0; }
     </style>
+    <script>
+        /* Init tema before first paint to avoid flash */
+        (function(){ var t = localStorage.getItem('theme'); if(t==='dark') document.documentElement.setAttribute('data-theme','dark'); })();
+    </script>
 </head>
 <body>
     <header class="header">
@@ -1559,6 +1669,7 @@
             <p id="header-date"></p>
         </div>
         <div class="header-actions">
+            <button class="btn-header ghost" id="btn-theme" onclick="toggleDarkMode()" title="Alternar modo escuro/claro">🌙</button>
             <button class="btn-header ghost" onclick="openImportContextual()">⬇ Importar</button>
             <button class="btn-header primary" onclick="openModal()">+ Novo Post</button>
             <button class="btn-header ghost" onclick="doLogout()" title="Sair">↩ Sair</button>
@@ -3071,6 +3182,7 @@
                     ${p.conteudo ? `<button class="btn-sm teleprompter" onclick="openTeleprompter('${id}')">🎬 Teleprompter</button>` : ''}
                     <button class="btn-sm danger" onclick="deletePost('${id}')">🗑</button>
                 </div>
+                <div class="inline-editor-resize" onmousedown="startInlineResize(event,'${id}')" ontouchstart="startInlineResize(event,'${id}')"></div>
             `;
 
             setTimeout(() => {
@@ -3218,6 +3330,7 @@
                         ${p.conteudo ? `<button class="btn-sm teleprompter" onclick="openTeleprompter('${p.id}')" title="Abrir teleprompter">🎬 Teleprompter</button>` : ''}
                         <button class="btn-sm danger" onclick="deletePost('${p.id}')">🗑</button>
                     </div>
+                    <div class="inline-editor-resize" onmousedown="startInlineResize(event,'${p.id}')" ontouchstart="startInlineResize(event,'${p.id}')"></div>
                 </div>
                 `;
             }
@@ -4290,6 +4403,56 @@
         function showApp() {
             document.getElementById('login-overlay').style.display = 'none';
             loadPosts();
+        }
+
+        // ── Dark mode toggle ─────────────────────────────────────────────────
+        function toggleDarkMode() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const next   = isDark ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            document.getElementById('btn-theme').textContent = next === 'dark' ? '☀️' : '🌙';
+        }
+        // Sync button icon with saved theme on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const saved = localStorage.getItem('theme');
+            const btn   = document.getElementById('btn-theme');
+            if (btn) btn.textContent = saved === 'dark' ? '☀️' : '🌙';
+        });
+
+        // ── Resize inline editor roteiros (altura + largura) ─────────────────
+        function startInlineResize(e, id) {
+            e.preventDefault();
+            const el   = document.getElementById('ied-' + id);
+            if (!el) return;
+            const card = el.closest('.post-card');
+            const startY = e.touches ? e.touches[0].clientY : e.clientY;
+            const startX = e.touches ? e.touches[0].clientX : e.clientX;
+            const startH = el.offsetHeight;
+            const startW = card ? card.offsetWidth : null;
+            if (card) card.style.justifySelf = 'start';
+
+            function onMove(ev) {
+                const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
+                const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+                const newH = Math.max(80, startH + cy - startY);
+                el.style.height    = newH + 'px';
+                el.style.maxHeight = 'none';
+                if (card && startW !== null) {
+                    const newW = Math.max(260, startW + cx - startX);
+                    card.style.width = newW + 'px';
+                }
+            }
+            function onUp() {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup',   onUp);
+                document.removeEventListener('touchmove', onMove);
+                document.removeEventListener('touchend',  onUp);
+            }
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup',   onUp);
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('touchend',  onUp);
         }
 
         // ── Resize do editor inline de copys (altura + largura) ─────────────
