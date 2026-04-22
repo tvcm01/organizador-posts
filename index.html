@@ -1699,6 +1699,67 @@
 
     <!-- Galeria de temas -->
     <div id="temas-view">
+        <div class="toolbar" id="temas-toolbar-wrap">
+            <div class="filter-pills">
+                <div class="filter-pill-wrap">
+                    <button class="filter-pill" id="tpill-status" onclick="toggleTMenu('status')">Status <span id="tcount-status" class="pill-count"></span><span class="pill-arrow">▼</span></button>
+                    <div class="filter-menu" id="tmenu-status">
+                        <div class="menu-item"><input type="checkbox" id="tst-rascunho" value="Rascunho" onchange="onTFilter()"><label for="tst-rascunho">✏️ Rascunho</label></div>
+                        <div class="menu-item"><input type="checkbox" id="tst-pronto"   value="Pronto"   onchange="onTFilter()"><label for="tst-pronto">✓ Pronto</label></div>
+                        <div class="menu-item"><input type="checkbox" id="tst-usado"    value="Usado"    onchange="onTFilter()"><label for="tst-usado">★ Usado</label></div>
+                        <div class="menu-divider"></div>
+                        <button class="menu-clear" onclick="clearTGroup('status')">Limpar</button>
+                    </div>
+                </div>
+                <div class="filter-pill-wrap">
+                    <button class="filter-pill" id="tpill-papel" onclick="toggleTMenu('papel')">Papel <span id="tcount-papel" class="pill-count"></span><span class="pill-arrow">▼</span></button>
+                    <div class="filter-menu" id="tmenu-papel">
+                        <div class="menu-item"><input type="checkbox" id="tp-mentor"    value="Mentor"    onchange="onTFilter()"><label for="tp-mentor">Mentor</label></div>
+                        <div class="menu-item"><input type="checkbox" id="tp-pensador"  value="Pensador"  onchange="onTFilter()"><label for="tp-pensador">Pensador</label></div>
+                        <div class="menu-item"><input type="checkbox" id="tp-professor" value="Professor" onchange="onTFilter()"><label for="tp-professor">Professor</label></div>
+                        <div class="menu-item"><input type="checkbox" id="tp-amigo"     value="Amigo"     onchange="onTFilter()"><label for="tp-amigo">Amigo</label></div>
+                        <div class="menu-item"><input type="checkbox" id="tp-soldado"   value="Soldado"   onchange="onTFilter()"><label for="tp-soldado">Soldado</label></div>
+                        <div class="menu-divider"></div>
+                        <button class="menu-clear" onclick="clearTGroup('papel')">Limpar</button>
+                    </div>
+                </div>
+                <div class="filter-pill-wrap">
+                    <button class="filter-pill" id="tpill-formato" onclick="toggleTMenu('formato')">Formato <span id="tcount-formato" class="pill-count"></span><span class="pill-arrow">▼</span></button>
+                    <div class="filter-menu" id="tmenu-formato">
+                        <div class="menu-item"><input type="checkbox" id="tf-reels"    value="Reels"    onchange="onTFilter()"><label for="tf-reels">Reels</label></div>
+                        <div class="menu-item"><input type="checkbox" id="tf-stories"  value="Stories"  onchange="onTFilter()"><label for="tf-stories">Stories</label></div>
+                        <div class="menu-item"><input type="checkbox" id="tf-texto"    value="Texto"    onchange="onTFilter()"><label for="tf-texto">Texto</label></div>
+                        <div class="menu-item"><input type="checkbox" id="tf-shorts"   value="Shorts"   onchange="onTFilter()"><label for="tf-shorts">Shorts</label></div>
+                        <div class="menu-item"><input type="checkbox" id="tf-audio"    value="Audio"    onchange="onTFilter()"><label for="tf-audio">Audio</label></div>
+                        <div class="menu-item"><input type="checkbox" id="tf-video"    value="Video"    onchange="onTFilter()"><label for="tf-video">Video</label></div>
+                        <div class="menu-divider"></div>
+                        <button class="menu-clear" onclick="clearTGroup('formato')">Limpar</button>
+                    </div>
+                </div>
+                <div class="filter-pill-wrap">
+                    <button class="filter-pill" id="tpill-plataforma" onclick="toggleTMenu('plataforma')">Plataforma <span id="tcount-plataforma" class="pill-count"></span><span class="pill-arrow">▼</span></button>
+                    <div class="filter-menu" id="tmenu-plataforma">
+                        <div class="menu-item"><input type="checkbox" id="tpl-instagram" value="Instagram" onchange="onTFilter()"><label for="tpl-instagram">Instagram</label></div>
+                        <div class="menu-item"><input type="checkbox" id="tpl-tiktok"    value="TikTok"    onchange="onTFilter()"><label for="tpl-tiktok">TikTok</label></div>
+                        <div class="menu-item"><input type="checkbox" id="tpl-youtube"   value="YouTube"   onchange="onTFilter()"><label for="tpl-youtube">YouTube</label></div>
+                        <div class="menu-item"><input type="checkbox" id="tpl-spotify"   value="Spotify"   onchange="onTFilter()"><label for="tpl-spotify">Spotify</label></div>
+                        <div class="menu-divider"></div>
+                        <button class="menu-clear" onclick="clearTGroup('plataforma')">Limpar</button>
+                    </div>
+                </div>
+                <div class="filter-pill-wrap">
+                    <button class="filter-pill" id="tpill-funil" onclick="toggleTMenu('funil')">Funil <span id="tcount-funil" class="pill-count"></span><span class="pill-arrow">▼</span></button>
+                    <div class="filter-menu" id="tmenu-funil">
+                        <div class="menu-item"><input type="checkbox" id="tfn-atracao"      value="Atração"      onchange="onTFilter()"><label for="tfn-atracao">🟢 Atração</label></div>
+                        <div class="menu-item"><input type="checkbox" id="tfn-qualificacao" value="Qualificação" onchange="onTFilter()"><label for="tfn-qualificacao">🟡 Qualificação</label></div>
+                        <div class="menu-item"><input type="checkbox" id="tfn-conversao"    value="Conversão"    onchange="onTFilter()"><label for="tfn-conversao">🔴 Conversão</label></div>
+                        <div class="menu-divider"></div>
+                        <button class="menu-clear" onclick="clearTGroup('funil')">Limpar</button>
+                    </div>
+                </div>
+                <button class="filter-pill" id="tbtn-clear-all" style="display:none;background:var(--danger);color:white;border-color:var(--danger)" onclick="clearAllTFilters()">✕ Limpar tudo</button>
+            </div>
+        </div>
         <div class="temas-grid" id="temas-container"></div>
     </div>
 
@@ -2807,9 +2868,94 @@
             showToast(`✓ ${selecionados.length} cop${selecionados.length>1?'ys':'y'} importada${selecionados.length>1?'s':''}!`);
         }
 
+        // ─── Filtros da galeria de temas ──────────────────────
+        const TGROUPS = {
+            status:    { pill: 'tpill-status',    menu: 'tmenu-status',    inputs: () => document.querySelectorAll('#tmenu-status input[type=checkbox]') },
+            papel:     { pill: 'tpill-papel',     menu: 'tmenu-papel',     inputs: () => document.querySelectorAll('#tmenu-papel input[type=checkbox]') },
+            formato:   { pill: 'tpill-formato',   menu: 'tmenu-formato',   inputs: () => document.querySelectorAll('#tmenu-formato input[type=checkbox]') },
+            plataforma:{ pill: 'tpill-plataforma',menu: 'tmenu-plataforma',inputs: () => document.querySelectorAll('#tmenu-plataforma input[type=checkbox]') },
+            funil:     { pill: 'tpill-funil',     menu: 'tmenu-funil',     inputs: () => document.querySelectorAll('#tmenu-funil input[type=checkbox]') },
+        };
+
+        function closeAllTMenus() {
+            Object.keys(TGROUPS).forEach(g => {
+                document.getElementById(TGROUPS[g].menu).classList.remove('open');
+                document.getElementById(TGROUPS[g].pill).classList.remove('open');
+            });
+        }
+
+        function toggleTMenu(group) {
+            const menu = document.getElementById(TGROUPS[group].menu);
+            const pill = document.getElementById(TGROUPS[group].pill);
+            const isOpen = menu.classList.contains('open');
+            closeAllTMenus();
+            if (!isOpen) { menu.classList.add('open'); pill.classList.add('open'); }
+        }
+
+        function getTChecked(group) {
+            return [...TGROUPS[group].inputs()].filter(el => el.checked).map(el => el.value);
+        }
+
+        function updateTPillState(group) {
+            const vals = getTChecked(group);
+            const pill = document.getElementById(TGROUPS[group].pill);
+            const cnt  = document.getElementById('tcount-' + group);
+            if (vals.length) {
+                pill.classList.add('has-selection');
+                if (cnt) { cnt.textContent = vals.length; cnt.style.display = 'inline'; }
+            } else {
+                pill.classList.remove('has-selection');
+                if (cnt) cnt.style.display = 'none';
+            }
+        }
+
+        function updateTClearAllBtn() {
+            const hasAny = Object.keys(TGROUPS).some(g => getTChecked(g).length > 0);
+            document.getElementById('tbtn-clear-all').style.display = hasAny ? 'inline-flex' : 'none';
+        }
+
+        function onTFilter() {
+            Object.keys(TGROUPS).forEach(updateTPillState);
+            updateTClearAllBtn();
+            renderThemes();
+        }
+
+        function clearTGroup(group) {
+            TGROUPS[group].inputs().forEach(el => el.checked = false);
+            onTFilter();
+        }
+
+        function clearAllTFilters() {
+            Object.keys(TGROUPS).forEach(g => TGROUPS[g].inputs().forEach(el => el.checked = false));
+            onTFilter();
+        }
+
+        // Fecha menus de temas ao clicar fora
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.filter-pill-wrap')) closeAllTMenus();
+        });
+
         // ─── Render galeria de temas ──────────────────────────
         function renderThemes() {
-            const ativos = posts.filter(p => p.status !== 'Lixeira');
+            const fStatus = getTChecked('status');
+            const fPapel  = getTChecked('papel');
+            const fFmt    = getTChecked('formato');
+            const fPlat   = getTChecked('plataforma');
+            const fFunil  = getTChecked('funil');
+            const hasFilter = fStatus.length || fPapel.length || fFmt.length || fPlat.length || fFunil.length;
+
+            let ativos = posts.filter(p => p.status !== 'Lixeira');
+            if (hasFilter) {
+                ativos = ativos.filter(p => {
+                    if (fStatus.length && !fStatus.includes(p.status || 'Rascunho')) return false;
+                    if (fPapel.length  && !fPapel.includes(p.papel))                 return false;
+                    if (fFmt.length    && !fFmt.includes(p.formato))                 return false;
+                    if (fPlat.length   && !fPlat.includes(p.plataforma))             return false;
+                    if (fFunil.length  && !fFunil.includes(p.funil))                 return false;
+                    return true;
+                });
+            }
+
             const grupos = {};
             ativos.forEach(p => {
                 const t = p.tema || '(Sem tema)';
