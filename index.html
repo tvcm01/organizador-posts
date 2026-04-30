@@ -259,53 +259,6 @@
             max-height: 220px;
             overflow-y: auto;
         }
-        /* Login */
-        .login-overlay {
-            position: fixed; inset: 0;
-            background: var(--primary);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 9999;
-        }
-        .login-box {
-            background: white;
-            border-radius: 16px;
-            padding: 2.5rem 2rem;
-            width: 100%; max-width: 360px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-            display: flex; flex-direction: column; gap: 1.25rem;
-        }
-        .login-logo {
-            text-align: center;
-        }
-        .login-logo h1 { font-size: 1.3rem; font-weight: 800; color: var(--primary); }
-        .login-logo p { font-size: 0.75rem; color: var(--gray-400); margin-top: 0.2rem; }
-        .login-field { display: flex; flex-direction: column; gap: 0.35rem; }
-        .login-field label { font-size: 0.75rem; font-weight: 600; color: var(--gray-600); }
-        .login-field input {
-            padding: 0.65rem 0.875rem;
-            border: 1.5px solid var(--gray-300);
-            border-radius: 8px; font-size: 0.9rem;
-            outline: none; transition: border-color 0.15s;
-        }
-        .login-field input:focus { border-color: var(--primary); }
-        .login-btn {
-            background: var(--primary); color: white;
-            border: none; border-radius: 8px;
-            padding: 0.75rem; font-size: 0.9rem;
-            font-weight: 700; cursor: pointer;
-            transition: background 0.15s;
-        }
-        .login-btn:hover { background: var(--primary-dark); }
-        .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .login-error {
-            font-size: 0.75rem; color: var(--danger);
-            background: #fee2e2; border-radius: 6px;
-            padding: 0.5rem 0.75rem; display: none;
-        }
-        .login-signup {
-            text-align: center; font-size: 0.72rem; color: var(--gray-400);
-        }
-        .login-signup a { color: var(--primary); cursor: pointer; font-weight: 600; }
         /* ─── Galeria de Temas ─────────────────────────────── */
         .temas-grid {
             display: grid;
@@ -1681,7 +1634,7 @@
         [data-theme="dark"] .teleprompter-text { background: #0f172a; color: #e2e8f0; }
         [data-theme="dark"] .copy-bar          { background: #0f172a; }
         /* Misc */
-        [data-theme="dark"] .login-box         { background: #1e293b; }
+
         [data-theme="dark"] .drop-zone         { background: #1e293b; border-color: #475569; }
         [data-theme="dark"] .docx-post-preview { background: #293548; border-color: #334155; }
         [data-theme="dark"] .card-title        { color: #cbd5e1; }
@@ -1703,7 +1656,6 @@
             <button class="btn-header ghost" id="btn-theme" onclick="toggleDarkMode()" title="Alternar modo escuro/claro">🌙</button>
             <button class="btn-header ghost" onclick="openImportContextual()">⬇ Importar</button>
             <button class="btn-header primary" onclick="openModal()">+ Novo Post</button>
-            <button class="btn-header ghost" onclick="doLogout()" title="Sair">↩ Sair</button>
         </div>
     </header>
 
@@ -2398,28 +2350,6 @@
         </div>
     </div>
 
-    <!-- Login overlay -->
-    <div class="login-overlay" id="login-overlay">
-        <div class="login-box">
-            <div class="login-logo">
-                <h1>Organizador de Posts</h1>
-                <p>Entre para acessar seus roteiros</p>
-            </div>
-            <div class="login-field">
-                <label>E-mail</label>
-                <input type="email" id="login-email" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')doLogin()">
-            </div>
-            <div class="login-field">
-                <label>Senha</label>
-                <input type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
-            </div>
-            <div class="login-error" id="login-error"></div>
-            <button class="login-btn" id="login-btn" onclick="doLogin()">Entrar</button>
-            <div class="login-signup" id="login-mode-toggle">
-                Não tem conta? <a onclick="toggleLoginMode()">Criar conta</a>
-            </div>
-        </div>
-    </div>
 
     <div class="toast" id="toast"></div>
 
@@ -4550,58 +4480,6 @@
             setTimeout(() => t.classList.remove('show'), 2500);
         }
 
-        // ─── Auth ─────────────────────────────────────────────────
-        let loginMode = 'signin'; // 'signin' | 'signup'
-
-        function toggleLoginMode() {
-            loginMode = loginMode === 'signin' ? 'signup' : 'signin';
-            document.getElementById('login-btn').textContent = loginMode === 'signup' ? 'Criar conta' : 'Entrar';
-            document.getElementById('login-mode-toggle').innerHTML = loginMode === 'signup'
-                ? 'Já tem conta? <a onclick="toggleLoginMode()">Entrar</a>'
-                : 'Não tem conta? <a onclick="toggleLoginMode()">Criar conta</a>';
-            document.getElementById('login-error').style.display = 'none';
-        }
-
-        async function doLogin() {
-            const email = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-password').value;
-            const errEl = document.getElementById('login-error');
-            const btn = document.getElementById('login-btn');
-            if (!email || !password) { showLoginError('Preencha e-mail e senha.'); return; }
-            btn.disabled = true;
-            btn.textContent = '...';
-            errEl.style.display = 'none';
-            const fn = loginMode === 'signup'
-                ? db.auth.signUp({ email, password })
-                : db.auth.signInWithPassword({ email, password });
-            const { error } = await fn;
-            btn.disabled = false;
-            btn.textContent = loginMode === 'signup' ? 'Criar conta' : 'Entrar';
-            if (error) { showLoginError(error.message); return; }
-            if (loginMode === 'signup') {
-                showLoginError('Conta criada! Verifique seu e-mail para confirmar, depois entre.');
-                document.getElementById('login-error').style.cssText = 'display:block;background:#d1fae5;color:#065f46';
-                return;
-            }
-            showApp();
-        }
-
-        async function doLogout() {
-            await db.auth.signOut();
-            document.getElementById('login-overlay').style.display = 'flex';
-            document.getElementById('login-password').value = '';
-        }
-
-        function showLoginError(msg) {
-            const el = document.getElementById('login-error');
-            el.textContent = msg;
-            el.style.display = 'block';
-        }
-
-        function showApp() {
-            document.getElementById('login-overlay').style.display = 'none';
-            loadPosts();
-        }
 
         // ── Dark mode toggle ─────────────────────────────────────────────────
         function toggleDarkMode() {
@@ -4744,12 +4622,8 @@
         new MutationObserver(() => initModalResize())
             .observe(document.body, { attributes: true, subtree: true, attributeFilter: ['style'] });
 
-        // Verifica sessão existente ao carregar
-        (async () => {
-            const { data: { session } } = await db.auth.getSession();
-            if (session) { showApp(); }
-            // Se não há sessão, o login-overlay já está visível por padrão
-        })();
+        // Carrega posts diretamente (sem autenticação)
+        loadPosts();
     </script>
 </body>
 </html>
