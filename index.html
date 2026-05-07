@@ -3053,11 +3053,18 @@
 
         // Load posts
         async function loadPosts() {
-            await cleanupLixeira();
+            try { await cleanupLixeira(); } catch(e) { console.warn('cleanupLixeira error (ignorado):', e); }
+
             const { data, error } = await db.from('posts').select('*').order('created_at', { ascending: false });
             if (error) {
-                console.error(error);
-                document.getElementById('posts-container').innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>Erro ao conectar. Verifique o console.</p></div>';
+                console.error('loadPosts error:', error);
+                const errMsg = `<div class="empty-state" style="grid-column:1/-1">
+                    <div class="icon">⚠️</div>
+                    <p><strong>Erro ao carregar dados</strong><br>${error.message || 'Verifique a conexão'}</p>
+                    <button class="btn-sm blue" style="margin-top:1rem" onclick="loadPosts()">🔄 Tentar novamente</button>
+                </div>`;
+                document.getElementById('posts-container').innerHTML = errMsg;
+                document.getElementById('temas-container').innerHTML = errMsg;
                 return;
             }
             // Extrai linhas de metadados e separa copys dos roteiros
